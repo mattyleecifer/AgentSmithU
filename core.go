@@ -226,10 +226,11 @@ func (agent *Agent) getmodelURL() string {
 	switch {
 	case strings.HasPrefix(agent.model, "mistral"):
 		url = "https://api.mistral.ai/v1/chat/completions"
-	case agent.model == "gpt-3.5-turbo":
+	case strings.HasPrefix(agent.model, "gpt"):
 		url = "https://api.openai.com/v1/chat/completions"
 	default:
 		// handle invalid model here
+		fmt.Println("Error: Invalid model")
 	}
 	return url
 }
