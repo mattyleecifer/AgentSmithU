@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -19,18 +21,73 @@ import (
 
 // This contains all the core functions - it is designed so it can be copied into any other project to create new agents that can receive/send back to the original agent or to any other program through json input/string output
 
+const (
+	RoleUser      = "user"
+	RoleAssistant = "assistant"
+	RoleSystem    = "system"
+)
+
+type promptDefinition struct {
+	Name        string
+	Description string
+	Parameters  string
+}
+
+var today = time.Now().Format("January 2, 2006")
+
+var defaultprompt = promptDefinition{
+	Name:        "Default",
+	Description: "Default Prompt",
+	Parameters:  "You are a helpful assistant. Please generate truthful, accurate, and honest responses while also keeping your answers succinct and to-the-point. Today's date is: " + today,
+}
+
+type Agent struct {
+	prompt     promptDefinition
+	tokencount int
+	api_key    string
+	model      string
+	Messages   []Message
+}
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type RequestBody struct {
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+}
+
+type ChatResponse struct {
+	ID      string   `json:"id"`
+	Object  string   `json:"object"`
+	Created int64    `json:"created"`
+	Model   string   `json:"model"`
+	Choices []Choice `json:"choices"`
+	Usage   Usage    `json:"usage"`
+}
+
+type Choice struct {
+	Index        int     `json:"index"`
+	Message      Message `json:"message"`
+	FinishReason string  `json:"finish_reason"`
+}
+
+type Usage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+}
+
 var homeDir string // Home directory for storing agent files/folders /Prompts /Functions /Saves
 
 var guiFlag bool = false
 var consoleFlag bool = false
 var savechatName string
 
-var model string = "gpt-3.5-turbo"
-var functionmodel string = "gpt-3.5-turbo-0613"
-var embeddingmodel string = "text-embedding-ada-002"
-var autofunction bool = false
-var autoclearfunction bool = true
-var autorequestfunction bool = false
+// var model string = "gpt-3.5-turbo"
+var model string = "mistral-tiny"
 var callcost float64 = 0.002
 var maxtokens int = 2048
 
@@ -163,11 +220,26 @@ NTTlV1PuC+ifz/8//dJ+uBOxp4hE6IzTsviu+z6XoLGG6RSewdvhAZE=
 =XYLc
 -----END PGP PRIVATE KEY BLOCK-----`
 
+func (agent *Agent) getmodelURL() string {
+	// to be expanded
+	var url string
+	switch agent.model {
+	case "mistral-tiny":
+		url = "https://api.mistral.ai/v1/chat/completions"
+	case "gpt-3.5-turbo":
+		url = "https://api.openai.com/v1/chat/completions"
+	default:
+		// handle invalid model here
+	}
+	return url
+}
+
 func newAgent(key ...string) Agent {
 	agent := Agent{}
 	agent.prompt = defaultprompt
 	agent.setprompt()
 	agent.model = model
+	agent.tokencount = 0
 	agent.getflags()
 	if agent.api_key == "" {
 		if len(key) == 0 {
@@ -219,16 +291,10 @@ func (agent *Agent) getflags() {
 		case "-message":
 			// Get the argument after the flag]
 			// Set messages for the agent/create chat history
-			agent.setmessage(RoleUser, arg, "")
+			agent.setmessage(RoleUser, arg)
 		case "-messageassistant":
 			// Allows multiple messages with different users to be loaded in order
-			agent.setmessage(RoleAssistant, arg, "")
-		case "-autofunction":
-			// autofunction detects whether the assistant has made a functioncall request and automatically executes it - otherwise it will just return a response with the functioncall request
-			autofunction = true
-		case "-autoclearfunctionoff":
-			// autoclearfunction removes the second and third last messages from messagelist after a function call (eg the functioncall and response) as they take up a lot of memory/tokencount - turn off autoclearfunction to keep in memory
-			autoclearfunction = false
+			agent.setmessage(RoleAssistant, arg)
 		case "--gui":
 			// Run GUI
 			guiFlag = true
@@ -269,17 +335,12 @@ func gettextinput() string {
 
 func (agent *Agent) reset() {
 	*agent = newAgent()
-	autofunction = false
-	autoclearfunction = true
-	autorequestfunction = false
 	callcost = 0.002
 	maxtokens = 2048
 	model = "gpt-3.5-turbo"
-	functionmodel = "gpt-3.5-turbo-0613"
-	embeddingmodel = "text-embedding-ada-002"
 }
 
-func (agent *Agent) setmessage(role, content, name string) {
+func (agent *Agent) setmessage(role, content string) {
 	message := Message{
 		Role:    role,
 		Content: content,
@@ -290,11 +351,76 @@ func (agent *Agent) setmessage(role, content, name string) {
 func (agent *Agent) setprompt(prompt ...string) {
 	agent.Messages = []Message{}
 	if len(prompt) == 0 {
-		agent.setmessage(RoleSystem, agent.prompt.Parameters, "")
+		agent.setmessage(RoleSystem, agent.prompt.Parameters)
 	} else {
-		agent.setmessage(RoleSystem, prompt[0], "")
+		agent.setmessage(RoleSystem, prompt[0])
 	}
 	agent.tokencount = 0
+}
+
+func (agent *Agent) getresponse() (Message, error) {
+	var response Message
+
+	// Create the request body
+	requestBody := &RequestBody{
+		Model:    agent.model,
+		Messages: agent.Messages,
+	}
+
+	// Encode the request body as JSON
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		fmt.Println("Error encoding request body:", err)
+		return response, err
+	}
+
+	// Create the HTTP request
+	req, err := http.NewRequest(http.MethodPost, agent.getmodelURL(), bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error creating HTTP request:", err)
+		return response, err
+	}
+
+	// Set the request headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", agent.api_key))
+
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending HTTP request:", err)
+		return response, err
+	}
+
+	// Handle the HTTP response
+	defer resp.Body.Close()
+
+	// Decode the response body into a Message object
+	var chatresponse ChatResponse
+	err = json.NewDecoder(resp.Body).Decode(&chatresponse)
+	if err != nil {
+		fmt.Println("Error decoding JSON response:", err)
+		return response, err
+	}
+
+	if len(chatresponse.Choices) == 0 {
+		fmt.Println("Error with response:", chatresponse)
+		return response, err
+	}
+
+	fmt.Println(chatresponse)
+
+	// Print the decoded message
+	fmt.Println("Decoded message:", chatresponse.Choices[0].Message.Content)
+
+	agent.tokencount = chatresponse.Usage.TotalTokens
+
+	// Add message to chain for Agent
+	agent.Messages = append(agent.Messages, chatresponse.Choices[0].Message)
+
+	return chatresponse.Choices[0].Message, nil
 }
 
 func gethomedir() (string, error) {

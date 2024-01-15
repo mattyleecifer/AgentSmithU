@@ -1,0 +1,31 @@
+<div id="top-row" class="top-row">
+    <div class="mobile" hx-trigger="intersect" hx-delete="/sidebar/" hx-target="#sidebar" hx-swap="outerHTML"></div>
+    {{ range .Messages }}
+    <div id="message" class="message">
+        <div class="agent">{{ .Role }}</div>
+        <div id="reply-{{ .Index }}" class="content">
+            <pre style="white-space: pre-wrap; font-family: inherit;">{{ .Content }}</pre>
+        </div>
+        <div class="editbutton">
+            <button hx-get="/chat/edit/{{ .Index }}" hx-target="#reply-{{ .Index }}">Edit</button>
+            <button hx-delete="/chat/edit/{{ .Index }}" hx-target="#main-content">Delete</button>
+        </div>
+    </div>
+    {{ else }}
+    <div id="welcometext" style="margin-top: 20%;"><p>Start asking questions!</p></div>
+    {{ end }}
+    <div id="chatloading" class="htmx-indicator"><p>Loading...</p></div>
+</div>
+<div id="bottom-row" class="bottom-row">
+    <div class="chatbox">
+        <div id="inputbox" class="inputbox">
+            <textarea id="chatinput" type="text" name="text" autocomplete="off" tabindex="1"></textarea>
+        </div>
+        <div class="chatsubmitclear">
+            <button style="height: 60%;" hx-select="#message, #response" hx-select-oob="#chatinput" hx-post="/chat/" hx-target="#chatloading" hx-swap="beforebegin scroll:#top-row:bottom" hx-include="#chatinput" hx-trigger="click, keydown[keyCode==13&&shiftKey!=true] from:#inputbox">Submit</button>
+            <button style="margin-top: auto; height: 40%;" hx-post="/chat/clear/" hx-target="#main-content">Clear Chat</button>
+        </div>
+    </div> 
+</div>
+
+

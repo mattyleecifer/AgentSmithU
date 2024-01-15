@@ -1,0 +1,164 @@
+html, body {
+    font-size: 18px;
+    color: rgb(232, 230, 227);
+    background-color: #202324;
+    }
+
+p {
+    text-align: center;
+}
+
+button {
+    padding: 10px 5px;
+    width: 7vw;
+    /* display: block; */
+    /* margin: auto; */
+    font-size: 14px;
+    color: rgb(232, 230, 227);
+    background-color: #454a4d;
+    border-color: #000;
+    outline-color: #000;
+    background-color: #454a4d;
+}
+
+/* .btn {
+    width: 7%;
+} */
+
+.buttonon{
+    background-color: darkred;
+}
+
+.buttonoff{
+    background-color: darkgreen;
+}
+
+#floating-button {
+    background-color: rgba(69, 74, 77, 0.8);
+    border: none;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 9999;
+  }
+  
+textarea {
+    height: 100%;
+    width: 100%;
+    font-size: 18px;
+    color: rgb(232, 230, 227);
+    background-color: #454a4d;
+}
+
+input {
+    font-size: 18px;
+    color: rgb(232, 230, 227);
+    background-color: #454a4d;
+}
+
+.container {
+    display: inline-block;
+    height: 100vh;
+    width: 100vw;
+}
+
+.sidebar {
+    display: block;
+    width: 15%;
+    float: left;
+    background-color: #202324;
+    height: 100%;
+    /* border-right: 2px solid #000; */
+}
+
+.sidebar button {
+    width: 100%;
+}
+
+.main-content {
+    display: block;
+    height: 100%;
+}
+
+.top-row {
+    overflow-y: scroll;
+    height: 85%;
+}
+
+.centertext {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow-y: auto;
+}
+
+.agent {
+    display: flex;
+    width: 8%;
+    float: left;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    /* overflow: hidden; */
+    /* text-overflow: ellipsis; */
+}
+
+.message {
+    display: flex;
+}
+
+.content {
+    padding-left: 10px;
+    padding-right: 10px;
+    width: 100%;
+}
+
+.editbutton {
+    width: 7%;
+    float: right;
+    margin-left: auto;
+}
+
+.bottom-row {
+    display: flex;
+    height: 15%;
+    bottom: 0;
+    position: sticky;
+}
+
+.chatbox {
+    display: flex; 
+    width: 100%; 
+    height: 100%;
+}
+
+.inputbox {
+    display: flex;
+    float: left;
+    width: 100%;
+}
+
+.chatsubmitclear {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    float: right; 
+}
+
+.mobile {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}
+
+.nonmobile {
+    display: flex;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}
+
+@media (prefers-color-scheme: dark) {
+    /* disable darkmode invert since it's already dark */
+    }
