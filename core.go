@@ -87,7 +87,7 @@ var consoleFlag bool = false
 var savechatName string
 
 // var model string = "gpt-3.5-turbo"
-var model string = "mistral-tiny"
+var defaultmodel string = "mistral-tiny"
 var callcost float64 = 0.002
 var maxtokens int = 2048
 
@@ -239,7 +239,7 @@ func newAgent(key ...string) Agent {
 	agent := Agent{}
 	agent.prompt = defaultprompt
 	agent.setprompt()
-	agent.model = model
+	agent.model = defaultmodel
 	agent.tokencount = 0
 	agent.getflags()
 	if agent.api_key == "" {
@@ -285,7 +285,7 @@ func (agent *Agent) getflags() {
 			agent.setprompt(arg)
 		case "-model":
 			// Set model
-			model = arg
+			defaultmodel = arg
 		case "-maxtokens":
 			// Change setting variable
 			maxtokens, _ = strconv.Atoi(arg)
@@ -338,7 +338,6 @@ func (agent *Agent) reset() {
 	*agent = newAgent()
 	callcost = 0.002
 	maxtokens = 2048
-	model = "gpt-3.5-turbo"
 }
 
 func (agent *Agent) setmessage(role, content string) {

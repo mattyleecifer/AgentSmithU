@@ -1,4 +1,4 @@
-module universalchatbot
+module AgentSmithU
 
 go 1.21.1
 
