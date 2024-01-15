@@ -223,10 +223,10 @@ NTTlV1PuC+ifz/8//dJ+uBOxp4hE6IzTsviu+z6XoLGG6RSewdvhAZE=
 func (agent *Agent) getmodelURL() string {
 	// to be expanded
 	var url string
-	switch agent.model {
-	case "mistral-tiny":
+	switch {
+	case strings.HasPrefix(agent.model, "mistral"):
 		url = "https://api.mistral.ai/v1/chat/completions"
-	case "gpt-3.5-turbo":
+	case agent.model == "gpt-3.5-turbo":
 		url = "https://api.openai.com/v1/chat/completions"
 	default:
 		// handle invalid model here
