@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -57,6 +58,7 @@ type Message struct {
 type RequestBody struct {
 	Model    string    `json:"model"`
 	Messages []Message `json:"messages"`
+	Stream   bool      `json:"stream"`
 }
 
 type ChatResponse struct {
@@ -66,6 +68,10 @@ type ChatResponse struct {
 	Model   string   `json:"model"`
 	Choices []Choice `json:"choices"`
 	Usage   Usage    `json:"usage"`
+}
+
+type ChatResponseOllama struct {
+	Message Message `json:"message"`
 }
 
 type Choice struct {
@@ -87,7 +93,7 @@ var consoleFlag bool = false
 var savechatName string
 
 // var model string = "gpt-3.5-turbo"
-var defaultmodel string = "mistral-tiny"
+var defaultmodel string = "dolphin-mistral"
 var callcost float64 = 0.002
 var maxtokens int = 2048
 
@@ -224,6 +230,8 @@ func (agent *Agent) getmodelURL() string {
 	// to be expanded
 	var url string
 	switch {
+	case strings.HasPrefix(agent.model, "dolphin"):
+		url = "http://localhost:11434/api/chat"
 	case strings.HasPrefix(agent.model, "mistral"):
 		url = "https://api.mistral.ai/v1/chat/completions"
 	case strings.HasPrefix(agent.model, "gpt"):
@@ -367,6 +375,15 @@ func (agent *Agent) getresponse() (Message, error) {
 		Messages: agent.Messages,
 	}
 
+	parsedURL, err := url.Parse(agent.getmodelURL())
+	if err != nil {
+		fmt.Println("Error parsing URL:", err) // Handle error accordingly
+	}
+
+	if strings.Contains(parsedURL.Host, "localhost") {
+		requestBody.Stream = false
+	}
+
 	// Encode the request body as JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
@@ -397,30 +414,51 @@ func (agent *Agent) getresponse() (Message, error) {
 	// Handle the HTTP response
 	defer resp.Body.Close()
 
-	// Decode the response body into a Message object
-	var chatresponse ChatResponse
-	err = json.NewDecoder(resp.Body).Decode(&chatresponse)
-	if err != nil {
-		fmt.Println("Error decoding JSON response:", err)
-		return response, err
+	if strings.Contains(parsedURL.Host, "localhost") {
+		var chatresponse ChatResponseOllama
+		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
+		if err != nil {
+			fmt.Println("Error decoding JSON response:", err)
+			return response, err
+		}
+
+		fmt.Println(chatresponse)
+
+		// Print the decoded message
+		fmt.Println("Decoded message:", chatresponse.Message.Content)
+
+		agent.tokencount = 0
+
+		// Add message to chain for Agent
+		agent.Messages = append(agent.Messages, chatresponse.Message)
+
+		return chatresponse.Message, nil
+	} else {
+		var chatresponse ChatResponse
+
+		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
+		if err != nil {
+			fmt.Println("Error decoding JSON response:", err)
+			return response, err
+		}
+
+		if len(chatresponse.Choices) == 0 {
+			fmt.Println("Error with response:", chatresponse)
+			return response, err
+		}
+
+		fmt.Println(chatresponse)
+
+		// Print the decoded message
+		fmt.Println("Decoded message:", chatresponse.Choices[0].Message.Content)
+
+		agent.tokencount = chatresponse.Usage.TotalTokens
+
+		// Add message to chain for Agent
+		agent.Messages = append(agent.Messages, chatresponse.Choices[0].Message)
+
+		return chatresponse.Choices[0].Message, nil
 	}
-
-	if len(chatresponse.Choices) == 0 {
-		fmt.Println("Error with response:", chatresponse)
-		return response, err
-	}
-
-	fmt.Println(chatresponse)
-
-	// Print the decoded message
-	fmt.Println("Decoded message:", chatresponse.Choices[0].Message.Content)
-
-	agent.tokencount = chatresponse.Usage.TotalTokens
-
-	// Add message to chain for Agent
-	agent.Messages = append(agent.Messages, chatresponse.Choices[0].Message)
-
-	return chatresponse.Choices[0].Message, nil
 }
 
 func gethomedir() (string, error) {
