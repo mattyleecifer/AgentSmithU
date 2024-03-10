@@ -71,7 +71,8 @@ type ChatResponse struct {
 }
 
 type ChatResponseOllama struct {
-	Message Message `json:"message"`
+	Message    Message `json:"message"`
+	Eval_count int     `json:"eval_count"`
 }
 
 type Choice struct {
@@ -373,15 +374,14 @@ func (agent *Agent) getresponse() (Message, error) {
 	requestBody := &RequestBody{
 		Model:    agent.model,
 		Messages: agent.Messages,
+		Stream:   false,
 	}
 
-	parsedURL, err := url.Parse(agent.getmodelURL())
+	modelurl := agent.getmodelURL()
+
+	parsedURL, err := url.Parse(modelurl)
 	if err != nil {
 		fmt.Println("Error parsing URL:", err) // Handle error accordingly
-	}
-
-	if strings.Contains(parsedURL.Host, "localhost") {
-		requestBody.Stream = false
 	}
 
 	// Encode the request body as JSON
@@ -392,7 +392,7 @@ func (agent *Agent) getresponse() (Message, error) {
 	}
 
 	// Create the HTTP request
-	req, err := http.NewRequest(http.MethodPost, agent.getmodelURL(), bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, modelurl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Error creating HTTP request:", err)
 		return response, err
@@ -427,7 +427,7 @@ func (agent *Agent) getresponse() (Message, error) {
 		// Print the decoded message
 		fmt.Println("Decoded message:", chatresponse.Message.Content)
 
-		agent.tokencount = 0
+		agent.tokencount = chatresponse.Eval_count
 
 		// Add message to chain for Agent
 		agent.Messages = append(agent.Messages, chatresponse.Message)
