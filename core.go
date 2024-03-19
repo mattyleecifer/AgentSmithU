@@ -94,7 +94,7 @@ var consoleFlag bool = false
 var savechatName string
 
 // var model string = "gpt-3.5-turbo"
-var defaultmodel string = "dolphin-mistral"
+var defaultmodel string = "llama2-uncensored"
 var callcost float64 = 0.002
 var maxtokens int = 2048
 
@@ -231,15 +231,13 @@ func (agent *Agent) getmodelURL() string {
 	// to be expanded
 	var url string
 	switch {
-	case strings.HasPrefix(agent.model, "dolphin"):
-		url = "http://localhost:11434/api/chat"
 	case strings.HasPrefix(agent.model, "mistral"):
 		url = "https://api.mistral.ai/v1/chat/completions"
 	case strings.HasPrefix(agent.model, "gpt"):
 		url = "https://api.openai.com/v1/chat/completions"
 	default:
 		// handle invalid model here
-		fmt.Println("Error: Invalid model")
+		url = "http://localhost:11434/api/chat"
 	}
 	return url
 }
