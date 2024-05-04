@@ -243,8 +243,8 @@ func (agent *Agent) getmodelURL() string {
 func newAgent(key ...string) Agent {
 	var today = time.Now().Format("January 2, 2006")
 	agent := Agent{}
-	agent.prompt = defaultprompt
 	defaultprompt.Parameters += today
+	agent.prompt = defaultprompt
 	agent.setprompt()
 	agent.model = defaultmodel
 	agent.tokencount = 0
