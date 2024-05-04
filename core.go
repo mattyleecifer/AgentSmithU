@@ -34,12 +34,10 @@ type promptDefinition struct {
 	Parameters  string
 }
 
-var today = time.Now().Format("January 2, 2006")
-
 var defaultprompt = promptDefinition{
 	Name:        "Default",
 	Description: "Default Prompt",
-	Parameters:  "You are a helpful assistant. Please generate truthful, accurate, and honest responses while also keeping your answers succinct and to-the-point. Do no assume the user is correct. If the user is wrong then state so plainly along with reasoning. Use step-by-step reasoning when generating a response. Show your working. Today's date is: " + today,
+	Parameters:  "You are a helpful assistant. Please generate truthful, accurate, and honest responses while also keeping your answers succinct and to-the-point. Do no assume the user is correct. If the user is wrong then state so plainly along with reasoning. Use step-by-step reasoning when generating a response. Show your working. Today's date is: ",
 }
 
 type Agent struct {
@@ -243,8 +241,10 @@ func (agent *Agent) getmodelURL() string {
 }
 
 func newAgent(key ...string) Agent {
+	var today = time.Now().Format("January 2, 2006")
 	agent := Agent{}
 	agent.prompt = defaultprompt
+	defaultprompt.Parameters += today
 	agent.setprompt()
 	agent.model = defaultmodel
 	agent.tokencount = 0
