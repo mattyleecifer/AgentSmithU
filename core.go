@@ -680,8 +680,13 @@ func (agent *Agent) deletelines(editchoice string) error {
 	fmt.Println("Deleting lines: ", sortednums)
 
 	// go from highest to lowest to not fu the order
-	for i := len(sortednums) - 1; i >= 0; i-- {
-		agent.Messages = append(agent.Messages[:sortednums[i]], agent.Messages[sortednums[i]+1:]...)
+	// for i := len(sortednums) - 1; i >= 0; i-- {
+	// 	agent.Messages = append(agent.Messages[:sortednums[i]], agent.Messages[sortednums[i]+1:]...)
+	// }
+
+	for _, num := range sortednums {
+		agent.Messages[num].Role = ""
+		agent.Messages[num].Content = ""
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -29,11 +30,29 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 			Messages []message
 		}
 
-		messages := agent.Messages
-		if len(messages) == 1 {
+		// remove empty messages
+		// empty messages are removed here because they are blanked out when you 'delete' - refreshing the page to clear the deleted messages seemed best, otherwise it would break the order of the messages in edits/deletes
+
+		// figure out what they are first
+		var emptymessages []int
+		for i, item := range agent.Messages[1:] {
+			if item.Role == "" && item.Content == "" {
+				emptymessages = append(emptymessages, i)
+			}
+		}
+		// sort the numbers and start from top
+		sort.Ints(emptymessages)
+		for i := len(emptymessages) - 1; i >= 0; i-- {
+			agent.Messages = append(agent.Messages[:emptymessages[i]+1], agent.Messages[emptymessages[i]+2:]...)
+		}
+
+		// Check what to display
+		if len(agent.Messages) == 1 {
+			// If only system prompt, show the empty page
 			render(w, hchatpage, data)
 		} else {
-			for i, item := range messages[1:] {
+			// Display existing messages
+			for i, item := range agent.Messages[1:] {
 				var content string
 				lines := strings.Split(item.Content, "\n")
 				for _, line := range lines {
