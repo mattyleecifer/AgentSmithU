@@ -6,6 +6,7 @@
         <form hx-put="/settings/">
             <p>Key: <input name="apikey" value=""></p>
             <p>Chat Model: <input name="chatmodel" value="{{ .Model }}"></p>
+            <p>Model url: <input name="modelurl" value="{{ .ModelURL }}"></p>
             <p>Max Tokens: <input name="maxtokens" value="{{ .Maxtokens }}"></p>
             <p>Call cost: <input name="callcost" value="{{ .Callcost }}"></p>
             <p><button class="btn">Save</button></p>

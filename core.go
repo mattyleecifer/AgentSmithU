@@ -45,6 +45,7 @@ type Agent struct {
 	tokencount int
 	api_key    string
 	model      string
+	modelurl   string
 	Messages   []Message
 }
 
@@ -92,7 +93,7 @@ var consoleFlag bool = false
 var savechatName string
 
 // var model string = "gpt-3.5-turbo"
-var defaultmodel string = "llama2-uncensored"
+var defaultmodel string = "phi3"
 var callcost float64 = 0.002
 var maxtokens int = 2048
 
@@ -231,11 +232,17 @@ func (agent *Agent) getmodelURL() string {
 	switch {
 	case strings.HasPrefix(agent.model, "mistral"):
 		url = "https://api.mistral.ai/v1/chat/completions"
+		agent.modelurl = "https://api.mistral.ai/v1/chat/completions"
 	case strings.HasPrefix(agent.model, "gpt"):
 		url = "https://api.openai.com/v1/chat/completions"
+		agent.modelurl = "https://api.openai.com/v1/chat/completions"
+	case strings.HasPrefix(agent.model, "phi3"):
+		url = "http://localhost:11434/api/chat"
+		agent.modelurl = "http://localhost:11434/api/chat"
 	default:
 		// handle invalid model here
-		url = "http://localhost:11434/api/chat"
+		agent.modelurl = "http://localhost:11434/api/chat"
+		url = agent.modelurl
 	}
 	return url
 }
@@ -376,7 +383,6 @@ func (agent *Agent) getresponse() (Message, error) {
 	}
 
 	modelurl := agent.getmodelURL()
-
 	parsedURL, err := url.Parse(modelurl)
 	if err != nil {
 		fmt.Println("Error parsing URL:", err) // Handle error accordingly
