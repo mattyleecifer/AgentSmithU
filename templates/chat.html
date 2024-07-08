@@ -8,7 +8,7 @@
         </div>
         <div class="editbutton">
             <button hx-get="/chat/edit/{{ .Index }}" hx-target="#reply-{{ .Index }}">Edit</button>
-            <button hx-delete="/chat/edit/{{ .Index }}" hx-target="#main-content">Delete</button>
+            <button hx-delete="/chat/edit/{{ .Index }}" hx-target="closest .message">Delete</button>
         </div>
     </div>
     {{ else }}

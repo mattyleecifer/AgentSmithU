@@ -126,8 +126,8 @@ func (agent *Agent) hchatedit(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		r.Method = http.MethodGet
-		agent.hchat(w, r)
+		// r.Method = http.MethodGet
+		// agent.hchat(w, r)
 	}
 }
 
