@@ -2,14 +2,7 @@
     <div class="mobile" hx-trigger="intersect" hx-delete="/sidebar/" hx-target="#sidebar" hx-swap="outerHTML"></div>
     {{ range .Messages }}
     <div id="message" class="message">
-        <div class="agent">{{ .Role }}</div>
-        <div id="reply-{{ .Index }}" class="content">
-            <pre style="white-space: pre-wrap; font-family: inherit;">{{ .Content }}</pre>
-        </div>
-        <div class="editbutton">
-            <button hx-get="/chat/edit/{{ .Index }}" hx-target="#reply-{{ .Index }}">Edit</button>
-            <button hx-delete="/chat/edit/{{ .Index }}" hx-target="closest .message">Delete</button>
-        </div>
+       {{ .Content }} 
     </div>
     {{ else }}
     <div id="welcometext" style="margin-top: 20%;"><p>Start asking questions!</p></div>

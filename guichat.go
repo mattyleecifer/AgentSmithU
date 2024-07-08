@@ -21,8 +21,9 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		type message struct {
 			Role    string
-			Content string
+			Content template.HTML
 			Index   int
+			Header  string
 		}
 		var data struct {
 			Messages []message
@@ -38,11 +39,22 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 				for _, line := range lines {
 					content += line + "<br>"
 				}
+				index := strconv.Itoa(i + 1)
+				content = `<div class="agent">` + item.Role + `</div>
+					<div id="reply-` + index + `" class="content">
+						<pre style="white-space: pre-wrap; font-family: inherit;">` + item.Content + `</pre>
+					</div>
+					<div class="editbutton">
+						<button hx-get="/chat/edit/` + index + `" hx-target="#reply-` + index + `">Edit</button>
+						<button hx-delete="/chat/edit/` + index + `" hx-target="closest .message">Delete</button>
+					</div>`
 				msg := message{
-					Role:    item.Role,
-					Content: item.Content,
-					Index:   i + 1,
+					Content: template.HTML(content),
 				}
+				if item.Role == "assistant" {
+					msg.Content = template.HTML(`<div style="display: flex; width: 100%; background-color: #393939">` + content + `</div>`)
+				}
+
 				data.Messages = append(data.Messages, msg)
 			}
 			render(w, hchatpage, data)
