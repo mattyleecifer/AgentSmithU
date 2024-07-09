@@ -691,7 +691,6 @@ func (agent *Agent) deletelines(editchoice string) error {
 	// }
 
 	for _, num := range sortednums {
-		agent.Messages[num].Role = ""
 		agent.Messages[num].Content = ""
 	}
 

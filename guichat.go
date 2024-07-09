@@ -29,14 +29,12 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 		var data struct {
 			Messages []message
 		}
-
 		// remove empty messages
-		// empty messages are removed here because they are blanked out when you 'delete' - refreshing the page to clear the deleted messages seemed best, otherwise it would break the order of the messages in edits/deletes
 
 		// figure out what they are first
 		var emptymessages []int
 		for i, item := range agent.Messages[1:] {
-			if item.Role == "" && item.Content == "" {
+			if item.Content == "" {
 				emptymessages = append(emptymessages, i)
 			}
 		}
@@ -45,7 +43,6 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 		for i := len(emptymessages) - 1; i >= 0; i-- {
 			agent.Messages = append(agent.Messages[:emptymessages[i]+1], agent.Messages[emptymessages[i]+2:]...)
 		}
-
 		// Check what to display
 		if len(agent.Messages) == 1 {
 			// If only system prompt, show the empty page
@@ -65,7 +62,7 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 					</div>
 					<div class="editbutton">
 						<button hx-get="/chat/edit/` + index + `" hx-target="#reply-` + index + `">Edit</button>
-						<button hx-delete="/chat/edit/` + index + `" hx-target="closest .message">Delete</button>
+						<button hx-delete="/chat/edit/` + index + `" hx-swap="outerHTML" hx-target="closest .message">Delete</button>
 					</div>`
 				msg := message{
 					Content: template.HTML(content),
@@ -107,6 +104,7 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPut {
+		// Get agent response
 		response, err := agent.getresponse()
 		if err != nil {
 			fmt.Println(err)
