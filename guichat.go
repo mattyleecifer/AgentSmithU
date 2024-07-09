@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -29,20 +28,10 @@ func (agent *Agent) hchat(w http.ResponseWriter, r *http.Request) {
 		var data struct {
 			Messages []message
 		}
-		// remove empty messages
 
-		// figure out what they are first
-		var emptymessages []int
-		for i, item := range agent.Messages[1:] {
-			if item.Content == "" {
-				emptymessages = append(emptymessages, i)
-			}
-		}
-		// sort the numbers and start from top
-		sort.Ints(emptymessages)
-		for i := len(emptymessages) - 1; i >= 0; i-- {
-			agent.Messages = append(agent.Messages[:emptymessages[i]+1], agent.Messages[emptymessages[i]+2:]...)
-		}
+		// remove empty messages
+		agent.deletelines()
+
 		// Check what to display
 		if len(agent.Messages) == 1 {
 			// If only system prompt, show the empty page
@@ -151,7 +140,7 @@ func (agent *Agent) hchatedit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodDelete {
-		err := agent.deletelines(query)
+		err := agent.clearlines(query)
 		if err != nil {
 			fmt.Println(err)
 		}

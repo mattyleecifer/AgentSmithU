@@ -666,7 +666,8 @@ func getsavefilelist(filetype string) ([]string, error) {
 	return res, nil
 }
 
-func (agent *Agent) deletelines(editchoice string) error {
+func (agent *Agent) clearlines(editchoice string) error {
+	// Makes numbered messages empty
 	// Use regular expression to find all numerical segments in the input string
 	reg := regexp.MustCompile("[0-9]+")
 	nums := reg.FindAllString(editchoice, -1)
@@ -695,4 +696,20 @@ func (agent *Agent) deletelines(editchoice string) error {
 	}
 
 	return nil
+}
+
+func (agent *Agent) deletelines() {
+	// remove empty messages
+	// figure out what they are first
+	var emptymessages []int
+	for i, item := range agent.Messages[1:] {
+		if item.Content == "" {
+			emptymessages = append(emptymessages, i)
+		}
+	}
+	// sort the numbers and start from top
+	sort.Ints(emptymessages)
+	for i := len(emptymessages) - 1; i >= 0; i-- {
+		agent.Messages = append(agent.Messages[:emptymessages[i]+1], agent.Messages[emptymessages[i]+2:]...)
+	}
 }

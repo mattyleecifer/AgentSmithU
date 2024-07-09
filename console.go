@@ -97,7 +97,8 @@ func (agent *Agent) process_text(text string) string {
 		if editchoice == "" {
 			return ""
 		}
-		agent.deletelines(editchoice)
+		agent.clearlines(editchoice)
+		agent.deletelines()
 		agent.printnumberlines()
 		fmt.Println("Lines deleted!")
 		return ""
