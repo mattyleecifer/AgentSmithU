@@ -12,6 +12,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -55,15 +56,16 @@ type Message struct {
 }
 
 type RequestBody struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Stream   bool      `json:"stream"`
+	Model      string    `json:"model"`
+	Messages   []Message `json:"messages"`
+	Stream     bool      `json:"stream"`
+	Max_tokens int       `json:"max_tokens"`
 }
 
 type ChatResponse struct {
-	ID      string   `json:"id"`
-	Object  string   `json:"object"`
-	Created int64    `json:"created"`
+	ID string `json:"id"`
+	// Object  string   `json:"object"`
+	// Created int64    `json:"created"`
 	Model   string   `json:"model"`
 	Choices []Choice `json:"choices"`
 	Usage   Usage    `json:"usage"`
@@ -72,6 +74,20 @@ type ChatResponse struct {
 type ChatResponseOllama struct {
 	Message    Message `json:"message"`
 	Eval_count int     `json:"eval_count"`
+}
+
+type ChatResponseAnthropic struct {
+	Content []AnthropicContent `json:"content"`
+	Usage   AnthropicUsage     `json:"usage"`
+}
+
+type AnthropicContent struct {
+	Text string `json:"text"`
+}
+
+type AnthropicUsage struct {
+	Input_tokens  int `json:"input_tokens"`
+	Output_tokens int `json:"output_tokens"`
 }
 
 type Choice struct {
@@ -229,22 +245,23 @@ NTTlV1PuC+ifz/8//dJ+uBOxp4hE6IzTsviu+z6XoLGG6RSewdvhAZE=
 func (agent *Agent) getmodelURL() string {
 	// to be expanded
 	var url string
-	switch {
-	case strings.HasPrefix(agent.model, "mistral"):
-		url = "https://api.mistral.ai/v1/chat/completions"
-		agent.modelurl = "https://api.mistral.ai/v1/chat/completions"
-	case strings.HasPrefix(agent.model, "gpt"):
-		url = "https://api.openai.com/v1/chat/completions"
-		agent.modelurl = "https://api.openai.com/v1/chat/completions"
-	case strings.HasPrefix(agent.model, "phi3"):
-		url = "http://localhost:11434/api/chat"
-		agent.modelurl = "http://localhost:11434/api/chat"
-	default:
-		// handle invalid model here
-		agent.modelurl = "http://localhost:11434/api/chat"
-		url = agent.modelurl
+	if agent.modelurl == "" {
+		switch {
+		case strings.HasPrefix(agent.model, "mistral"):
+			url = "https://api.mistral.ai/v1/chat/completions"
+		case strings.HasPrefix(agent.model, "gpt"):
+			url = "https://api.openai.com/v1/chat/completions"
+		case strings.HasPrefix(agent.model, "claude"):
+			url = "https://api.anthropic.com/v1/messages"
+		case strings.HasPrefix(agent.model, "phi3"):
+			url = "http://localhost:11434/api/chat"
+		default:
+			// handle invalid model here
+			url = "http://localhost:11434/api/chat"
+		}
+		return url
 	}
-	return url
+	return agent.modelurl
 }
 
 func newAgent(key ...string) Agent {
@@ -253,7 +270,9 @@ func newAgent(key ...string) Agent {
 	agent.prompt = defaultprompt
 	agent.prompt.Parameters += today
 	agent.setprompt()
-	agent.model = defaultmodel
+	if agent.model == "" {
+		agent.model = defaultmodel
+	}
 	agent.tokencount = 0
 	agent.getflags()
 	if agent.api_key == "" {
@@ -299,7 +318,10 @@ func (agent *Agent) getflags() {
 			agent.setprompt(arg)
 		case "-model":
 			// Set model
-			defaultmodel = arg
+			agent.model = arg
+		case "-modelurl":
+			// Set model
+			agent.modelurl = arg
 		case "-maxtokens":
 			// Change setting variable
 			maxtokens, _ = strconv.Atoi(arg)
@@ -375,17 +397,29 @@ func (agent *Agent) setprompt(prompt ...string) {
 func (agent *Agent) getresponse() (Message, error) {
 	var response Message
 
-	// Create the request body
-	requestBody := &RequestBody{
-		Model:    agent.model,
-		Messages: agent.Messages,
-		Stream:   false,
-	}
-
 	modelurl := agent.getmodelURL()
 	parsedURL, err := url.Parse(modelurl)
 	if err != nil {
 		fmt.Println("Error parsing URL:", err) // Handle error accordingly
+	}
+
+	// Anthropic doesn't allow system role and roles must alternate between user/assistant
+	// This breaks things so this snippet changes the system to user and adds a dummy assistant message
+	if (strings.Contains(parsedURL.Host, "anthropic")) && (len(agent.Messages) == 2) {
+		agent.Messages[0].Role = RoleUser
+		dummyMessage := Message{
+			Role:    RoleAssistant,
+			Content: "I'm ready to serve!",
+		}
+		agent.Messages = slices.Insert(agent.Messages, 1, dummyMessage)
+	}
+
+	// Create the request body
+	requestBody := &RequestBody{
+		Model:      agent.model,
+		Messages:   agent.Messages,
+		Stream:     false,
+		Max_tokens: maxtokens,
 	}
 
 	// Encode the request body as JSON
@@ -407,6 +441,15 @@ func (agent *Agent) getresponse() (Message, error) {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", agent.api_key))
 
+	// Anthropic-specific headers
+	if strings.Contains(parsedURL.Host, "anthropic") {
+		req.Header["x-api-key"] = []string{agent.api_key}
+		req.Header["content-type"] = []string{"application/json"}
+		req.Header["anthropic-version"] = []string{"2023-06-01"}
+	}
+
+	fmt.Println(req)
+
 	// Send the HTTP request
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -417,6 +460,8 @@ func (agent *Agent) getresponse() (Message, error) {
 
 	// Handle the HTTP response
 	defer resp.Body.Close()
+
+	fmt.Println(resp)
 
 	if strings.Contains(parsedURL.Host, "localhost") {
 		var chatresponse ChatResponseOllama
@@ -437,6 +482,30 @@ func (agent *Agent) getresponse() (Message, error) {
 		agent.Messages = append(agent.Messages, chatresponse.Message)
 
 		return chatresponse.Message, nil
+	} else if strings.Contains(parsedURL.Host, "anthropic") {
+		var chatresponse ChatResponseAnthropic
+		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
+		if err != nil {
+			fmt.Println("Error decoding JSON response:", err)
+			return response, err
+		}
+
+		fmt.Println(chatresponse)
+
+		// Print the decoded message
+		fmt.Println("Decoded message:", chatresponse.Content[0].Text)
+
+		agent.tokencount = chatresponse.Usage.Input_tokens + chatresponse.Usage.Output_tokens
+
+		message := Message{
+			Role:    RoleAssistant,
+			Content: chatresponse.Content[0].Text,
+		}
+
+		// Add message to chain for Agent
+		agent.Messages = append(agent.Messages, message)
+
+		return message, nil
 	} else {
 		var chatresponse ChatResponse
 
