@@ -2,7 +2,7 @@
 
 This is a fork of [AgentSmith](https://github.com/mattyleecifer/AgentSmith/), a project where I used Golang/HTMX to build a program that can make agents/work as a chat interface. This project expands on that to allow users to use any chat model API that returns responses in a similar format to OpenAI's conversational responses. 
 
-It now works with OpenAI, Mistral, Anthropic, and Ollama (plus anything that uses the OpenAI messages API format).
+It now works with OpenAI, Mistral, Anthropic, and Ollama (plus anything that uses the OpenAI messages API format). I have added a very experimental function that uses a local LLM to convert any unfamiliar API responses to OpenAI's messages API format so that it can read it - this is still a little janky, but it kind of works.
 
 I had to remove "Functions" functionality as that seems to be a more OpenAI specific thing, but I have ideas on how to bring it back. 
 

@@ -222,7 +222,7 @@ func (agent *Agent) hsettings(w http.ResponseWriter, r *http.Request) {
 			ModelURL  string
 		}{
 			Model:     agent.model,
-			Maxtokens: maxtokens,
+			Maxtokens: agent.maxtokens,
 			Callcost:  callcost,
 			ModelURL:  agent.modelurl,
 		}
@@ -234,7 +234,7 @@ func (agent *Agent) hsettings(w http.ResponseWriter, r *http.Request) {
 			agent.api_key = apikey
 		}
 		agent.model = r.FormValue("chatmodel")
-		maxtokens, _ = strconv.Atoi(r.FormValue("maxtokens"))
+		agent.maxtokens, _ = strconv.Atoi(r.FormValue("maxtokens"))
 		callcost, _ = strconv.ParseFloat(r.FormValue("callcost"), 64)
 		agent.modelurl = r.FormValue("modelurl")
 

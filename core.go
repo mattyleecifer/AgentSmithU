@@ -47,6 +47,7 @@ type Agent struct {
 	api_key    string
 	model      string
 	modelurl   string
+	maxtokens  int
 	Messages   []Message
 }
 
@@ -111,7 +112,6 @@ var savechatName string
 // var model string = "gpt-3.5-turbo"
 var defaultmodel string = "phi3"
 var callcost float64 = 0.002
-var maxtokens int = 2048
 
 var authstring string
 var allowedIps []string
@@ -324,7 +324,7 @@ func (agent *Agent) getflags() {
 			agent.modelurl = arg
 		case "-maxtokens":
 			// Change setting variable
-			maxtokens, _ = strconv.Atoi(arg)
+			agent.maxtokens, _ = strconv.Atoi(arg)
 		case "-message":
 			// Get the argument after the flag]
 			// Set messages for the agent/create chat history
@@ -373,7 +373,7 @@ func gettextinput() string {
 func (agent *Agent) reset() {
 	*agent = newAgent()
 	callcost = 0.002
-	maxtokens = 2048
+	agent.maxtokens = 2048
 }
 
 func (agent *Agent) setmessage(role, content string) {
@@ -419,7 +419,7 @@ func (agent *Agent) getresponse() (Message, error) {
 		Model:      agent.model,
 		Messages:   agent.Messages,
 		Stream:     false,
-		Max_tokens: maxtokens,
+		Max_tokens: agent.maxtokens,
 	}
 
 	// Encode the request body as JSON
@@ -482,7 +482,7 @@ func (agent *Agent) getresponse() (Message, error) {
 		agent.Messages = append(agent.Messages, chatresponse.Message)
 
 		return chatresponse.Message, nil
-	} else if strings.Contains(parsedURL.Host, "anthropic") {
+	} else if strings.Contains(parsedURL.Host, "awefanthropic") {
 		var chatresponse ChatResponseAnthropic
 		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
 		if err != nil {
@@ -818,8 +818,7 @@ func localAgentDecoder(jsonStr string) (ChatResponse, error) {
 	converter := newAgent()
 	converter.model = "phi3"
 	converter.modelurl = "http://localhost:11434/api/chat"
-	converter.setprompt(`Transform any inputted data into the following format. Do not fix any spelling mistakes or make anything up - enter the data exactly as it is:
-
+	converter.setprompt(`Transform any inputted data into the following format:
 	{
 		"choices": [
 			{
@@ -833,7 +832,10 @@ func localAgentDecoder(jsonStr string) (ChatResponse, error) {
 		"usage": {
 			"total_tokens": 74
 		}
-	}`)
+	}
+		
+	Do not fix any spelling mistakes or make anything up - enter the data exactly as it is. Do not change any fields. Ensure that all fields are present and filled out. Only transcribe the most recent entry.
+	`)
 
 	// attempt to get response convertered
 	converter.setmessage(RoleUser, jsonStr)
@@ -848,6 +850,7 @@ func localAgentDecoder(jsonStr string) (ChatResponse, error) {
 
 	// convert response into json
 	jsonResp := new(bytes.Buffer)
+	// json.Compact removes all the tabs/newlines/whitespace from the ai generated response
 	err = json.Compact(jsonResp, []byte(response.Content))
 	if err != nil {
 		fmt.Println("failed to convert", err)
