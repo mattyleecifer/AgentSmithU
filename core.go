@@ -63,10 +63,10 @@ type RequestBody struct {
 }
 
 type ChatResponse struct {
-	ID string `json:"id"`
+	// ID string `json:"id"`
 	// Object  string   `json:"object"`
 	// Created int64    `json:"created"`
-	Model   string   `json:"model"`
+	// Model   string   `json:"model"`
 	Choices []Choice `json:"choices"`
 	Usage   Usage    `json:"usage"`
 }
@@ -77,29 +77,29 @@ type ChatResponseOllama struct {
 }
 
 type ChatResponseAnthropic struct {
-	Content []AnthropicContent `json:"content"`
-	Usage   AnthropicUsage     `json:"usage"`
+	Content []ContentAnthropic `json:"content"`
+	Usage   UsageAnthropic     `json:"usage"`
 }
 
-type AnthropicContent struct {
+type ContentAnthropic struct {
 	Text string `json:"text"`
 }
 
-type AnthropicUsage struct {
+type UsageAnthropic struct {
 	Input_tokens  int `json:"input_tokens"`
 	Output_tokens int `json:"output_tokens"`
 }
 
 type Choice struct {
-	Index        int     `json:"index"`
-	Message      Message `json:"message"`
-	FinishReason string  `json:"finish_reason"`
+	// Index   int     `json:"index"`
+	Message Message `json:"message"`
+	// FinishReason string  `json:"finish_reason"`
 }
 
 type Usage struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	TotalTokens      int `json:"total_tokens"`
-	CompletionTokens int `json:"completion_tokens"`
+	// PromptTokens     int `json:"prompt_tokens"`
+	TotalTokens int `json:"total_tokens"`
+	// CompletionTokens int `json:"completion_tokens"`
 }
 
 var homeDir string // Home directory for storing agent files/folders /Prompts /Functions /Saves
@@ -448,7 +448,7 @@ func (agent *Agent) getresponse() (Message, error) {
 		req.Header["anthropic-version"] = []string{"2023-06-01"}
 	}
 
-	fmt.Println(req)
+	// fmt.Println(req)
 
 	// Send the HTTP request
 	client := &http.Client{}
@@ -461,7 +461,7 @@ func (agent *Agent) getresponse() (Message, error) {
 	// Handle the HTTP response
 	defer resp.Body.Close()
 
-	fmt.Println(resp)
+	// fmt.Println(resp)
 
 	if strings.Contains(parsedURL.Host, "localhost") {
 		var chatresponse ChatResponseOllama
@@ -509,15 +509,43 @@ func (agent *Agent) getresponse() (Message, error) {
 	} else {
 		var chatresponse ChatResponse
 
+		// copy resp.body so can use it multiple times
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body = io.NopCloser(bytes.NewBuffer(body))
+
 		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
 		if err != nil {
 			fmt.Println("Error decoding JSON response:", err)
-			return response, err
+
 		}
 
 		if len(chatresponse.Choices) == 0 {
 			fmt.Println("Error with response:", chatresponse)
-			return response, err
+			// attempt to use local llm to decode
+			// convert the JSON to string
+			// but first turn it into a map
+			var jsonResponse interface{}
+
+			// revive resp.body
+			resp.Body = io.NopCloser(bytes.NewBuffer(body))
+
+			err = json.NewDecoder(resp.Body).Decode(&jsonResponse)
+			if err != nil {
+				fmt.Println("Error decoding JSON response:", err)
+			}
+			jsonData, err := json.Marshal(jsonResponse)
+			if err != nil {
+				panic(err)
+			}
+			jsonStr := string(jsonData)
+
+			fmt.Println("jsonStr", jsonStr)
+
+			// send the string to the converter and receive chatresponse
+			chatresponse, err = localAgentDecoder(jsonStr)
+			if err != nil {
+				return response, err
+			}
 		}
 
 		fmt.Println(chatresponse)
@@ -781,4 +809,58 @@ func (agent *Agent) deletelines() {
 	for i := len(emptymessages) - 1; i >= 0; i-- {
 		agent.Messages = append(agent.Messages[:emptymessages[i]+1], agent.Messages[emptymessages[i]+2:]...)
 	}
+}
+
+func localAgentDecoder(jsonStr string) (ChatResponse, error) {
+	var chatresponse ChatResponse // convert response to text
+
+	// create local converter agent and set variables
+	converter := newAgent()
+	converter.model = "phi3"
+	converter.modelurl = "http://localhost:11434/api/chat"
+	converter.setprompt(`Transform any inputted data into the following format. Do not fix any spelling mistakes or make anything up - enter the data exactly as it is:
+
+	{
+		"choices": [
+			{
+				"index": 0,
+				"message": {
+					"content": "{{ text data }}",
+					"role": "{{ assistant/user/system }}"
+				},
+			}
+		],
+		"usage": {
+			"total_tokens": 74
+		}
+	}`)
+
+	// attempt to get response convertered
+	converter.setmessage(RoleUser, jsonStr)
+
+	response, err := converter.getresponse()
+	if err != nil {
+		fmt.Println("failed to convert", err)
+		return chatresponse, err
+	}
+
+	fmt.Println("response content", response.Content)
+
+	// convert response into json
+	jsonResp := new(bytes.Buffer)
+	err = json.Compact(jsonResp, []byte(response.Content))
+	if err != nil {
+		fmt.Println("failed to convert", err)
+		return chatresponse, err
+	}
+
+	fmt.Println("MarshallJSON", jsonResp.String())
+
+	err = json.Unmarshal(jsonResp.Bytes(), &chatresponse)
+	if err != nil {
+		fmt.Println("Error unmarshalling JSON:", err)
+		return chatresponse, err
+	}
+	fmt.Println("Converted data", chatresponse)
+	return chatresponse, nil
 }
