@@ -253,10 +253,8 @@ func (agent *Agent) getmodelURL() string {
 			url = "https://api.openai.com/v1/chat/completions"
 		case strings.HasPrefix(agent.model, "claude"):
 			url = "https://api.anthropic.com/v1/messages"
-		case strings.HasPrefix(agent.model, "phi3"):
-			url = "http://localhost:11434/api/chat"
 		default:
-			// handle invalid model here
+			// handle local models here
 			url = "http://localhost:11434/api/chat"
 		}
 		return url
@@ -269,6 +267,7 @@ func newAgent(key ...string) Agent {
 	agent := Agent{}
 	agent.prompt = defaultprompt
 	agent.prompt.Parameters += today
+	agent.maxtokens = 2048
 	agent.setprompt()
 	if agent.model == "" {
 		agent.model = defaultmodel
@@ -463,6 +462,7 @@ func (agent *Agent) getresponse() (Message, error) {
 
 	// fmt.Println(resp)
 
+	// For ollama based models
 	if strings.Contains(parsedURL.Host, "localhost") {
 		var chatresponse ChatResponseOllama
 		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
@@ -482,7 +482,7 @@ func (agent *Agent) getresponse() (Message, error) {
 		agent.Messages = append(agent.Messages, chatresponse.Message)
 
 		return chatresponse.Message, nil
-	} else if strings.Contains(parsedURL.Host, "awefanthropic") {
+	} else if strings.Contains(parsedURL.Host, "blaanthropic") {
 		var chatresponse ChatResponseAnthropic
 		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
 		if err != nil {
@@ -542,7 +542,7 @@ func (agent *Agent) getresponse() (Message, error) {
 			fmt.Println("jsonStr", jsonStr)
 
 			// send the string to the converter and receive chatresponse
-			chatresponse, err = localAgentDecoder(jsonStr)
+			chatresponse, err = agentAPIConverter(jsonStr)
 			if err != nil {
 				return response, err
 			}
@@ -811,31 +811,15 @@ func (agent *Agent) deletelines() {
 	}
 }
 
-func localAgentDecoder(jsonStr string) (ChatResponse, error) {
+func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 	var chatresponse ChatResponse // convert response to text
 
 	// create local converter agent and set variables
 	converter := newAgent()
-	converter.model = "phi3"
+	converter.model = "phi3" // any ollama llm should work, can even convert this to openai/mistral/anthropic
 	converter.modelurl = "http://localhost:11434/api/chat"
-	converter.setprompt(`Transform any inputted data into the following format:
-	{
-		"choices": [
-			{
-				"index": 0,
-				"message": {
-					"content": "{{ text data }}",
-					"role": "{{ assistant/user/system }}"
-				},
-			}
-		],
-		"usage": {
-			"total_tokens": 74
-		}
-	}
-		
-	Do not fix any spelling mistakes or make anything up - enter the data exactly as it is. Do not change any fields. Ensure that all fields are present and filled out. Only transcribe the most recent entry.
-	`)
+	converter.maxtokens = 2048
+	converter.setprompt(`Extract the text/message data from any inputs. Output only the text/message data without any commentary. Do not change anything. Output the text/message data exactly as it is written in the original data`)
 
 	// attempt to get response convertered
 	converter.setmessage(RoleUser, jsonStr)
@@ -846,24 +830,16 @@ func localAgentDecoder(jsonStr string) (ChatResponse, error) {
 		return chatresponse, err
 	}
 
-	fmt.Println("response content", response.Content)
+	// put the extracted response into a new message and return
 
-	// convert response into json
-	jsonResp := new(bytes.Buffer)
-	// json.Compact removes all the tabs/newlines/whitespace from the ai generated response
-	err = json.Compact(jsonResp, []byte(response.Content))
-	if err != nil {
-		fmt.Println("failed to convert", err)
-		return chatresponse, err
+	newMessage := Message{
+		Content: response.Content,
+		Role:    RoleAssistant,
 	}
-
-	fmt.Println("MarshallJSON", jsonResp.String())
-
-	err = json.Unmarshal(jsonResp.Bytes(), &chatresponse)
-	if err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
-		return chatresponse, err
+	newChoice := Choice{
+		Message: newMessage,
 	}
-	fmt.Println("Converted data", chatresponse)
+	chatresponse.Choices = append(chatresponse.Choices, newChoice)
+
 	return chatresponse, nil
 }
