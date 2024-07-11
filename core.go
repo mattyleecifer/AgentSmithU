@@ -402,15 +402,23 @@ func (agent *Agent) getresponse() (Message, error) {
 		fmt.Println("Error parsing URL:", err) // Handle error accordingly
 	}
 
-	// Anthropic doesn't allow system role and roles must alternate between user/assistant
-	// This breaks things so this snippet changes the system to user and adds a dummy assistant message
-	if (strings.Contains(parsedURL.Host, "anthropic")) && (len(agent.Messages) == 2) {
-		agent.Messages[0].Role = RoleUser
-		dummyMessage := Message{
-			Role:    RoleAssistant,
-			Content: "I'm ready to serve!",
+	if strings.Contains(parsedURL.Host, "anthropic") {
+		// Anthropic doesn't allow system role and roles must alternate between user/assistant
+		// This breaks things so this snippet changes the system to user and adds a dummy assistant message
+		if len(agent.Messages) == 2 {
+			agent.Messages[0].Role = RoleUser
 		}
-		agent.Messages = slices.Insert(agent.Messages, 1, dummyMessage)
+		// checks for double role occurences and adds a dummy message in between
+		// works backwards cause poppin in values probably isn't healthy going upwards
+		for index := len(agent.Messages) - 1; index >= 1; index-- {
+			if agent.Messages[index].Role == agent.Messages[index-1].Role {
+				dummyMessage := Message{
+					Role:    RoleAssistant,
+					Content: "_",
+				}
+				agent.Messages = slices.Insert(agent.Messages, index, dummyMessage)
+			}
+		}
 	}
 
 	// Create the request body
@@ -482,7 +490,7 @@ func (agent *Agent) getresponse() (Message, error) {
 		agent.Messages = append(agent.Messages, chatresponse.Message)
 
 		return chatresponse.Message, nil
-	} else if strings.Contains(parsedURL.Host, "blaanthropic") {
+	} else if strings.Contains(parsedURL.Host, "anthropic") {
 		var chatresponse ChatResponseAnthropic
 		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
 		if err != nil {
@@ -789,7 +797,7 @@ func (agent *Agent) clearlines(editchoice string) error {
 	// }
 
 	for _, num := range sortednums {
-		agent.Messages[num].Content = ""
+		agent.Messages[num].Content = "_"
 	}
 
 	return nil
@@ -800,7 +808,7 @@ func (agent *Agent) deletelines() {
 	// figure out what they are first
 	var emptymessages []int
 	for i, item := range agent.Messages[1:] {
-		if item.Content == "" {
+		if item.Content == "_" {
 			emptymessages = append(emptymessages, i)
 		}
 	}
