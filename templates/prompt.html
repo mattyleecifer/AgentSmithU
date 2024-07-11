@@ -18,7 +18,7 @@
     <div id="prompt-{{ . }}" style="display: flex;">
         <div style="text-align: left; float: left;">{{ . }}</div>
         <div style="float: right; margin-left: auto; display: inline;">
-            <button hx-target='#main-content' hx-get='/prompt/data/{{ . }}'>Load</button>
+            <button hx-get='/prompt/data/{{ . }}' hx-select='#promptname, #promptdescription, #edittext' hx-select-oob='#promptname, #promptdescription, #edittext' hx-swap='none'>Load</button>
             <button hx-target='#prompt-{{ . }}' hx-delete='/prompt/data/{{ . }}' hx-swap='delete' hx-confirm='Are you sure?'>Delete</button>
         </div>
     </div>
