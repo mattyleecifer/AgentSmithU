@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"regexp"
@@ -49,6 +51,7 @@ type Agent struct {
 	modelurl   string
 	maxtokens  int
 	Messages   []Message
+	Functions  []Function
 }
 
 type Message struct {
@@ -101,6 +104,12 @@ type Usage struct {
 	// PromptTokens     int `json:"prompt_tokens"`
 	TotalTokens int `json:"total_tokens"`
 	// CompletionTokens int `json:"completion_tokens"`
+}
+
+type Function struct {
+	Name        string
+	Description string
+	Parameters  string
 }
 
 var homeDir string // Home directory for storing agent files/folders /Prompts /Functions /Saves
@@ -558,15 +567,23 @@ func (agent *Agent) getresponse() (Message, error) {
 
 		fmt.Println(chatresponse)
 
+		message := chatresponse.Choices[0].Message
+
 		// Print the decoded message
-		fmt.Println("Decoded message:", chatresponse.Choices[0].Message.Content)
+		fmt.Println("Decoded message:", message.Content)
 
 		agent.tokencount = chatresponse.Usage.TotalTokens
 
-		// Add message to chain for Agent
-		agent.Messages = append(agent.Messages, chatresponse.Choices[0].Message)
+		// Check if there is a function call and then deal with it
+		if strings.HasPrefix(message.Content, "**functioncall") {
+			funcargs := strings.TrimPrefix("**functioncall ", message.Content)
+			fmt.Println("functioncall detected", funcargs)
+		}
 
-		return chatresponse.Choices[0].Message, nil
+		// Add message to chain for Agent
+		agent.Messages = append(agent.Messages, message)
+
+		return message, nil
 	}
 }
 
@@ -850,4 +867,99 @@ func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 	chatresponse.Choices = append(chatresponse.Choices, newChoice)
 
 	return chatresponse, nil
+}
+
+func (agent *Agent) setFunctionPrompt() {
+	// scan for functions and then add prompt for functions if detected
+	if len(agent.Functions) == 0 {
+		agent.setprompt()
+		return
+	}
+
+	functionPrompt := agent.prompt.Parameters + `You have several tools that you can access through function calls. You can access these tools if you need more information or tools to help you answer queries.
+
+	To call a function, just begin your reply with "
+	**functioncall" followed by the name of the function and the parameters eg '**functioncall browser {movedown}'. You have the following functions available to you:`
+	for _, function := range agent.Functions {
+		functionPrompt += "Name: " + function.Name + "\n"
+		functionPrompt += "Description: " + function.Description + "\n"
+		functionPrompt += "Parameters: " + function.Parameters + "\n"
+	}
+
+	agent.setprompt(functionPrompt)
+}
+
+// adds function to []Function
+func (agent *Agent) addFunction(function Function) error {
+	for _, name := range agent.Functions {
+		if name.Name == function.Name {
+			return fmt.Errorf("Function with same name already exists")
+		}
+	}
+	agent.Functions = append(agent.Functions, function)
+	agent.setFunctionPrompt()
+	return nil
+}
+
+// removes function from []Function
+func (agent *Agent) removeFunction(function string) {
+	for index, item := range agent.Functions {
+		if item.Name == function {
+			agent.Functions = append(agent.Functions[:index], agent.Functions[index+1:]...)
+		}
+	}
+	agent.setFunctionPrompt()
+}
+
+// detects if function is being called and then extracts the function and runs it if approved
+func (agent *Agent) runFunction(function Function) Message {
+	// runs function on system
+	data, err := json.Marshal(function.Parameters)
+	if err != nil {
+		fmt.Println(err)
+	}
+	cmd := strings.ToLower(function.Name)
+	arg1, _ := strconv.Unquote(string(data))
+	// unq := strconv.Unquote(string(data))
+	// arg1 := string(data)
+
+	// fmt.Println("\nFunction call: ", functiondef.Name)
+	fmt.Println("\nCommand: ", arg1)
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Failed to get current directory:", err)
+	}
+
+	runPath := filepath.Join(currentDir, cmd)
+
+	exec := exec.Command(runPath, arg1)
+	output, err := exec.CombinedOutput()
+	if err != nil {
+		log.Println(err)
+		output = []byte(err.Error())
+	}
+
+	fmt.Println("Function Output:\n", string(output))
+
+	var response Message
+	response.Content = string(output)
+	response.Role = RoleAssistant
+	return response
+}
+
+func (agent *Agent) loadFunction(filename string) (Function, error) {
+	var newfunction Function
+
+	filedata, err := agent.loadfile("Functions", filename)
+	if err != nil {
+		return newfunction, err
+	}
+
+	err = json.Unmarshal(filedata, &newfunction)
+	if err != nil {
+		return newfunction, err
+	}
+
+	return newfunction, nil
 }

@@ -31,6 +31,12 @@ var hsidebarpage string
 //go:embed templates/prompt.html
 var hpromptspage string
 
+//go:embed templates/function.html
+var hfunctionpage string
+
+//go:embed templates/functionedit.html
+var hfunctioneditpage string
+
 //go:embed templates/auth.html
 var hauthpage string
 

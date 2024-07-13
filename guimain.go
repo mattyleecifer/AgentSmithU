@@ -22,7 +22,8 @@ func (agent *Agent) gui() {
 	http.HandleFunc("/tokenupdate/", RequireAuth(agent.htokenupdate))
 	http.HandleFunc("/prompt/", RequireAuth(agent.hprompt))
 	http.HandleFunc("/prompt/data/", RequireAuth(agent.hpromptdata))
-
+	http.HandleFunc("/function/", RequireAuth(agent.hfunction))
+	http.HandleFunc("/function/data/", RequireAuth(agent.hfunctiondata))
 	http.Handle("/static/", http.FileServer(http.FS(hcss)))
 	fmt.Println("Running GUI on http://127.0.0.1"+port, "(ctrl-click link to open)")
 	log.Fatal(http.ListenAndServe(port, nil))

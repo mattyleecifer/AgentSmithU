@@ -20,7 +20,7 @@ func (agent *Agent) hprompt(w http.ResponseWriter, r *http.Request) {
 
 		data.Name = agent.prompt.Name
 		data.Description = agent.prompt.Description
-		data.Parameters = agent.prompt.Parameters
+		data.Parameters = agent.Messages[0].Content
 		data.Savedprompts, _ = getsavefilelist("Prompts")
 
 		render(w, hpromptspage, data)
