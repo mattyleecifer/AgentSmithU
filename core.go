@@ -393,13 +393,14 @@ func (agent *Agent) setmessage(role, content string) {
 }
 
 func (agent *Agent) setprompt(prompt ...string) {
-	agent.Messages = []Message{}
-	if len(prompt) == 0 {
-		agent.setmessage(RoleSystem, agent.prompt.Parameters)
-	} else {
-		agent.setmessage(RoleSystem, prompt[0])
+	if len(agent.Messages) == 0 {
+		agent.setmessage(RoleAssistant, "")
 	}
-	agent.tokencount = 0
+	if len(prompt) == 0 {
+		agent.Messages[0].Content = agent.prompt.Parameters
+	} else {
+		agent.Messages[0].Content = prompt[0]
+	}
 }
 
 func (agent *Agent) getresponse() (Message, error) {
@@ -876,10 +877,12 @@ func (agent *Agent) setFunctionPrompt() {
 		return
 	}
 
-	functionPrompt := agent.prompt.Parameters + `You have several tools that you can access through function calls. You can access these tools if you need more information or tools to help you answer queries.
+	functionPrompt := agent.prompt.Parameters + `
+	You have several tools that you can access through function calls. You can access these tools if you need more information or tools to help you answer queries.
 
 	To call a function, just begin your reply with "
-	**functioncall" followed by the name of the function and the parameters eg '**functioncall browser {movedown}'. You have the following functions available to you:`
+	**functioncall" followed by the name of the function and the parameters eg '**functioncall browser {movedown}'. You have the following functions available to you:
+	`
 	for _, function := range agent.Functions {
 		functionPrompt += "Name: " + function.Name + "\n"
 		functionPrompt += "Description: " + function.Description + "\n"

@@ -202,7 +202,9 @@ func (agent *Agent) hchatdata(w http.ResponseWriter, r *http.Request) {
 }
 
 func (agent *Agent) hchatclear(w http.ResponseWriter, r *http.Request) {
-	agent.setprompt()
+	newChat := []Message{}
+	newChat = append(newChat, agent.Messages[0])
+	agent.Messages = newChat
 	r.Method = http.MethodGet
 	agent.hchat(w, r)
 }
