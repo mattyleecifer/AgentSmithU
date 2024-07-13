@@ -480,6 +480,8 @@ func (agent *Agent) getresponse() (Message, error) {
 
 	// fmt.Println(resp)
 
+	// process the prompt and get response
+
 	// For ollama based models
 	if strings.Contains(parsedURL.Host, "localhost") {
 		var chatresponse ChatResponseOllama
@@ -491,15 +493,14 @@ func (agent *Agent) getresponse() (Message, error) {
 
 		fmt.Println(chatresponse)
 
+		response = chatresponse.Message
 		// Print the decoded message
-		fmt.Println("Decoded message:", chatresponse.Message.Content)
+		fmt.Println("Decoded message:", response.Content)
 
 		agent.tokencount = chatresponse.Eval_count
 
 		// Add message to chain for Agent
-		agent.Messages = append(agent.Messages, chatresponse.Message)
-
-		return chatresponse.Message, nil
+		agent.Messages = append(agent.Messages, response)
 	} else if strings.Contains(parsedURL.Host, "anthropic") {
 		var chatresponse ChatResponseAnthropic
 		err = json.NewDecoder(resp.Body).Decode(&chatresponse)
@@ -515,15 +516,13 @@ func (agent *Agent) getresponse() (Message, error) {
 
 		agent.tokencount = chatresponse.Usage.Input_tokens + chatresponse.Usage.Output_tokens
 
-		message := Message{
+		response = Message{
 			Role:    RoleAssistant,
 			Content: chatresponse.Content[0].Text,
 		}
 
 		// Add message to chain for Agent
-		agent.Messages = append(agent.Messages, message)
-
-		return message, nil
+		agent.Messages = append(agent.Messages, response)
 	} else {
 		var chatresponse ChatResponse
 
@@ -568,24 +567,23 @@ func (agent *Agent) getresponse() (Message, error) {
 
 		fmt.Println(chatresponse)
 
-		message := chatresponse.Choices[0].Message
+		response = chatresponse.Choices[0].Message
 
 		// Print the decoded message
-		fmt.Println("Decoded message:", message.Content)
+		fmt.Println("Decoded message:", response.Content)
 
 		agent.tokencount = chatresponse.Usage.TotalTokens
 
-		// Check if there is a function call and then deal with it
-		if strings.HasPrefix(message.Content, "**functioncall") {
-			funcargs := strings.TrimPrefix("**functioncall ", message.Content)
-			fmt.Println("functioncall detected", funcargs)
-		}
-
 		// Add message to chain for Agent
-		agent.Messages = append(agent.Messages, message)
-
-		return message, nil
+		agent.Messages = append(agent.Messages, response)
 	}
+
+	// Check if there is a function call and then deal with it
+	if strings.HasPrefix(response.Content, "**functioncall") {
+		fmt.Println("functioncall detected", response.Content)
+	}
+
+	return response, nil
 }
 
 func gethomedir() (string, error) {
@@ -881,7 +879,23 @@ func (agent *Agent) setFunctionPrompt() {
 	You have several tools that you can access through function calls. You can access these tools if you need more information or tools to help you answer queries.
 
 	To call a function, just begin your reply with "
-	**functioncall" followed by the name of the function and the parameters eg '**functioncall browser {movedown}'. You have the following functions available to you:
+	**functioncall" followed by the name of the function and the parameters 
+	
+	Template:
+	**functioncall 
+	{
+		"Name": "Name of function", 
+		"Parameters": "Function parameters"
+	}
+	
+	Example:
+	**functioncall 
+	{
+		"Name": "browser",
+		"Parameters": "open"
+	}
+	
+	You have the following functions available to you:
 	`
 	for _, function := range agent.Functions {
 		functionPrompt += "Name: " + function.Name + "\n"
