@@ -119,7 +119,7 @@ var consoleFlag bool = false
 var savechatName string
 
 // var model string = "gpt-3.5-turbo"
-var defaultmodel string = "phi3"
+var defaultmodel string = "llama3.2"
 var callcost float64 = 0.002
 
 var authstring string
@@ -256,11 +256,11 @@ func (agent *Agent) getmodelURL() string {
 	var url string
 	if agent.modelurl == "" {
 		switch {
-		case strings.HasPrefix(agent.model, "mistral"):
+		case strings.Contains(agent.model, "mistral"):
 			url = "https://api.mistral.ai/v1/chat/completions"
-		case strings.HasPrefix(agent.model, "gpt"):
+		case strings.Contains(agent.model, "gpt"):
 			url = "https://api.openai.com/v1/chat/completions"
-		case strings.HasPrefix(agent.model, "claude"):
+		case strings.Contains(agent.model, "claude"):
 			url = "https://api.anthropic.com/v1/messages"
 		default:
 			// handle local models here
@@ -879,22 +879,22 @@ func (agent *Agent) setFunctionPrompt() {
 	You have several tools that you can access through function calls. You can access these tools if you need more information or tools to help you answer queries.
 
 	To call a function, just begin your reply with "
-	**functioncall" followed by the name of the function and the parameters 
-	
+	**functioncall" followed by the name of the function and the parameters
+
 	Template:
-	**functioncall 
+	**functioncall
 	{
-		"Name": "Name of function", 
+		"Name": "Name of function",
 		"Parameters": "Function parameters"
 	}
-	
+
 	Example:
-	**functioncall 
+	**functioncall
 	{
 		"Name": "browser",
 		"Parameters": "open"
 	}
-	
+
 	You have the following functions available to you:
 	`
 	for _, function := range agent.Functions {
