@@ -1,27 +1,32 @@
 package main
 
 import (
+	"AgentSmithU/agent"
 	"fmt"
 )
 
+// type Agent agent.Agent
+
 func main() {
-	agent := newAgent()
+	// agent := agent.Agent{}
+	a := agent.New()
+	getflags(&a)
 
 	if guiFlag {
 		fmt.Println("Running GUI...")
-		go agent.console()
-		agent.gui()
+		go console(&a)
+		gui(&a)
 	} else if consoleFlag {
 		fmt.Println("Console only mode.")
-		agent.console()
+		console(&a)
 	} else {
-		response, err := agent.getresponse()
+		response, err := a.Getresponse()
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Println(response.Content)
 		if savechatName != "" {
-			agent.savefile(agent.Messages, "Chats")
+			savefile(a.Messages, "Chats")
 		}
 	}
 }

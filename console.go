@@ -6,10 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	. "AgentSmithU/agent"
+
 	"github.com/atotto/clipboard"
 )
 
-func (agent *Agent) console() {
+func console(agent *Agent) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
@@ -27,7 +29,7 @@ func (agent *Agent) console() {
 
 				input := gettextinput()
 
-				text := agent.process_text(input)
+				text := process_text(agent, input)
 
 				if text == "" {
 					continue
@@ -42,18 +44,18 @@ func (agent *Agent) console() {
 
 				for {
 					// retries response until it works
-					response, err := agent.getresponse()
+					response, err := agent.Getresponse()
 					if err != nil {
 						fmt.Println(err)
 						continue
 					}
 
-					estcost := (float64(agent.tokencount) / 1000) * callcost
+					estcost := (float64(agent.Tokencount) / 1000) * callcost
 
 					fmt.Println("\nAssistant:")
 					fmt.Println(response.Content)
 
-					fmt.Println("\nTokencount: ", agent.tokencount, " Est. Cost: ", estcost)
+					fmt.Println("\nTokencount: ", agent.Tokencount, " Est. Cost: ", estcost)
 					break
 				}
 			}
@@ -61,17 +63,17 @@ func (agent *Agent) console() {
 	}
 }
 
-func (agent *Agent) process_text(text string) string {
+func process_text(agent *Agent, text string) string {
 	switch text {
 	case "q", "quit":
 		fmt.Println("\nQuitting...")
 		os.Exit(0)
 	case "del", "delete", "!":
-		agent.setprompt()
+		agent.Setprompt()
 		fmt.Println("\nChat cleared!")
 		return ""
 	case "reset":
-		agent.reset()
+		Reset(agent)
 		fmt.Println("\nChat reset!")
 		return ""
 	case "paste":
@@ -91,19 +93,19 @@ func (agent *Agent) process_text(text string) string {
 		fmt.Println("\nCopied text!")
 		return ""
 	case "@", "sel", "select":
-		agent.printnumberlines()
+		printnumberlines(agent)
 		fmt.Println("\nWhich lines would you like to delete?")
 		editchoice := gettextinput()
 		if editchoice == "" {
 			return ""
 		}
-		agent.clearlines(editchoice)
-		agent.deletelines()
-		agent.printnumberlines()
+		agent.Clearlines(editchoice)
+		agent.Deletelines()
+		printnumberlines(agent)
 		fmt.Println("Lines deleted!")
 		return ""
 	case "save":
-		_, err := agent.savefile(agent.Messages, "Chats")
+		_, err := savefile(agent.Messages, "Chats")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -118,7 +120,7 @@ func (agent *Agent) process_text(text string) string {
 		if filename == "" {
 			return ""
 		}
-		_, err = agent.loadfile("Chats", filename)
+		_, err = loadfile(agent, "Chats", filename)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -132,13 +134,13 @@ func (agent *Agent) process_text(text string) string {
 				fmt.Println(err)
 				return ""
 			}
-			agent.prompt.Parameters = text
+			agent.Prompt.Parameters = text
 		} else {
 			text := input
-			agent.prompt.Parameters = text
+			agent.Prompt.Parameters = text
 
 		}
-		agent.setprompt()
+		agent.Setprompt()
 		fmt.Println("\nPrompt edited!")
 		return ""
 	case "help":
@@ -150,7 +152,7 @@ func (agent *Agent) process_text(text string) string {
 	return text
 }
 
-func (agent *Agent) printnumberlines() {
+func printnumberlines(agent *Agent) {
 	for i, msg := range agent.Messages {
 		if msg.Role == RoleUser {
 			fmt.Printf("%d. User: %s\n", i, msg.Content)

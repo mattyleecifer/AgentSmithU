@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "AgentSmithU/agent"
 	"fmt"
 	"html/template"
 	"log"
@@ -8,22 +9,22 @@ import (
 	"net/http"
 )
 
-func (agent *Agent) gui() {
+func gui(agent *Agent) {
 	http.HandleFunc("/", RequireAuth(index))
 	http.HandleFunc("/auth/", hauth)
-	http.HandleFunc("/chat/", RequireAuth(agent.hchat))
-	http.HandleFunc("/chat/edit/", RequireAuth(agent.hchatedit))
-	http.HandleFunc("/chat/save/", RequireAuth(agent.hchatsave))
-	http.HandleFunc("/chat/data/", RequireAuth(agent.hchatdata))
-	http.HandleFunc("/chat/clear/", RequireAuth(agent.hchatclear))
-	http.HandleFunc("/chat/reset/", RequireAuth(agent.hreset))
-	http.HandleFunc("/settings/", RequireAuth(agent.hsettings))
+	http.HandleFunc("/chat/", RequireAuth(hchat(agent)))
+	http.HandleFunc("/chat/edit/", RequireAuth(chatedit(agent)))
+	http.HandleFunc("/chat/save/", RequireAuth(hchatsave(agent)))
+	http.HandleFunc("/chat/data/", RequireAuth(hchatdata(agent)))
+	http.HandleFunc("/chat/clear/", RequireAuth(hchatclear(agent)))
+	http.HandleFunc("/chat/reset/", RequireAuth(hreset(agent)))
+	http.HandleFunc("/settings/", RequireAuth(hsettings(agent)))
 	http.HandleFunc("/sidebar/", RequireAuth(hsidebar))
-	http.HandleFunc("/tokenupdate/", RequireAuth(agent.htokenupdate))
-	http.HandleFunc("/prompt/", RequireAuth(agent.hprompt))
-	http.HandleFunc("/prompt/data/", RequireAuth(agent.hpromptdata))
-	http.HandleFunc("/function/", RequireAuth(agent.hfunction))
-	http.HandleFunc("/function/data/", RequireAuth(agent.hfunctiondata))
+	http.HandleFunc("/tokenupdate/", RequireAuth(htokenupdate(agent)))
+	http.HandleFunc("/prompt/", RequireAuth(hprompt(agent)))
+	http.HandleFunc("/prompt/data/", RequireAuth(hpromptdata(agent)))
+	http.HandleFunc("/function/", RequireAuth(hfunction(agent)))
+	http.HandleFunc("/function/data/", RequireAuth(hfunctiondata(agent)))
 	http.Handle("/static/", http.FileServer(http.FS(hcss)))
 	fmt.Println("Running GUI on http://127.0.0.1"+port, "(ctrl-click link to open)")
 	log.Fatal(http.ListenAndServe(port, nil))
