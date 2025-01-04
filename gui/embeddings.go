@@ -5,40 +5,40 @@ package gui
 import "embed"
 
 //go:embed templates/index.html
-var hindexpage string
+var indexpage string
 
 //go:embed templates/chat.html
-var hchatpage string
+var chatpage string
 
 //go:embed templates/chatnew.html
-var hchatnewpage string
+var chatnewpage string
 
 //go:embed templates/chatedit.html
-var hchatedit string
+var chateditpage string
 
 //go:embed templates/chatsave.html
-var hchatsavepage string
+var chatsavepage string
 
 //go:embed templates/chatfiles.html
-var hchatfilespage string
+var chatfilespage string
 
 //go:embed templates/settings.html
-var hsettingspage string
+var settingspage string
 
 //go:embed templates/sidebar.html
-var hsidebarpage string
+var sidebarpage string
 
 //go:embed templates/prompt.html
-var hpromptspage string
+var promptspage string
 
 //go:embed templates/function.html
-var hfunctionpage string
+var functionpage string
 
 //go:embed templates/functionedit.html
-var hfunctioneditpage string
+var functioneditpage string
 
 //go:embed templates/auth.html
-var hauthpage string
+var authpage string
 
 //go:embed static
-var hcss embed.FS
+var css embed.FS

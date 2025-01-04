@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func hfunction(ag *agent.Agent) http.HandlerFunc {
+func function(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			type Funcdef struct {
@@ -35,7 +35,7 @@ func hfunction(ag *agent.Agent) http.HandlerFunc {
 			}
 
 			data.Savedfunctions, _ = config.GetSaveFileList("Functions")
-			render(w, hfunctionpage, data)
+			render(w, functionpage, data)
 		}
 
 		if r.Method == http.MethodPost {
@@ -66,7 +66,7 @@ func hfunction(ag *agent.Agent) http.HandlerFunc {
 					}
 				}
 			}
-			render(w, hfunctioneditpage, data)
+			render(w, functioneditpage, data)
 		}
 
 		if r.Method == http.MethodDelete {
@@ -80,7 +80,7 @@ func hfunction(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hfunctiondata(ag *agent.Agent) http.HandlerFunc {
+func functiondata(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := strings.TrimPrefix(r.URL.Path, "/function/data/")
 
@@ -130,7 +130,7 @@ func hfunctiondata(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hfunctionrun(ag *agent.Agent) http.HandlerFunc {
+func functionrun(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rawquery := strings.TrimPrefix(r.URL.Path, "/function/run/")
 		query := strings.Split(rawquery, "/")
@@ -164,6 +164,6 @@ func hfunctionrun(ag *agent.Agent) http.HandlerFunc {
 		data.Role = agent.RoleAssistant
 		data.Content = response.Content
 		data.Index = strconv.Itoa(len(ag.Messages) - 1)
-		render(w, hchatnewpage, data)
+		render(w, chatnewpage, data)
 	}
 }

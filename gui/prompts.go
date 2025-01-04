@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func hprompt(ag *agent.Agent) http.HandlerFunc {
+func prompt(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			var data struct {
@@ -26,7 +26,7 @@ func hprompt(ag *agent.Agent) http.HandlerFunc {
 			data.Parameters = ag.Messages[0].Content
 			data.Savedprompts, _ = config.GetSaveFileList("Prompts")
 
-			render(w, hpromptspage, data)
+			render(w, promptspage, data)
 		}
 
 		if r.Method == http.MethodPost {
@@ -44,7 +44,7 @@ func hprompt(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hpromptdata(ag *agent.Agent) http.HandlerFunc {
+func promptdata(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := strings.TrimPrefix(r.URL.Path, "/prompt/data/")
 
@@ -70,7 +70,7 @@ func hpromptdata(ag *agent.Agent) http.HandlerFunc {
 			data.Parameters = prompt.Parameters
 			data.Savedprompts, _ = config.GetSaveFileList("Prompts")
 
-			render(w, hpromptspage, data)
+			render(w, promptspage, data)
 		}
 
 		if r.Method == http.MethodPost {

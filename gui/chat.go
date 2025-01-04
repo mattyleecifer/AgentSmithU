@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func hchat(ag *agent.Agent) http.HandlerFunc {
+func chat(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data struct {
 			Header   template.HTML
@@ -38,7 +38,7 @@ func hchat(ag *agent.Agent) http.HandlerFunc {
 			// Check what to display
 			if len(ag.Messages) == 1 {
 				// If only system prompt, show the empty page
-				render(w, hchatpage, data)
+				render(w, chatpage, data)
 			} else {
 				// Display existing messages
 				for i, item := range ag.Messages[1:] {
@@ -65,7 +65,7 @@ func hchat(ag *agent.Agent) http.HandlerFunc {
 
 					data.Messages = append(data.Messages, msg)
 				}
-				render(w, hchatpage, data)
+				render(w, chatpage, data)
 			}
 		}
 
@@ -92,7 +92,7 @@ func hchat(ag *agent.Agent) http.HandlerFunc {
 			data.Content = rawtext
 			data.Index = strconv.Itoa(len(ag.Messages) - 1)
 
-			render(w, hchatnewpage, data)
+			render(w, chatnewpage, data)
 		}
 
 		if r.Method == http.MethodPut {
@@ -110,7 +110,7 @@ func hchat(ag *agent.Agent) http.HandlerFunc {
 			data.Content = response.Content
 			data.Index = strconv.Itoa(len(ag.Messages) - 1)
 
-			render(w, hchatnewpage, data)
+			render(w, chatnewpage, data)
 		}
 	}
 }
@@ -130,7 +130,7 @@ func chatedit(ag *agent.Agent) http.HandlerFunc {
 				Edittext:  ag.Messages[id].Content,
 				MessageID: id,
 			}
-			render(w, hchatedit, data)
+			render(w, chateditpage, data)
 		}
 
 		if r.Method == http.MethodPost {
@@ -156,7 +156,7 @@ func chatedit(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hchatsave(ag *agent.Agent) http.HandlerFunc {
+func chatsave(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			currentTime := time.Now()
@@ -166,7 +166,7 @@ func hchatsave(ag *agent.Agent) http.HandlerFunc {
 			}{
 				Filename: filename,
 			}
-			render(w, hchatsavepage, data)
+			render(w, chatsavepage, data)
 		}
 
 		if r.Method == http.MethodPost {
@@ -177,7 +177,7 @@ func hchatsave(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hchatdata(ag *agent.Agent) http.HandlerFunc {
+func chatdata(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := strings.TrimPrefix(r.URL.Path, "/chat/data/")
 		if r.Method == http.MethodGet {
@@ -190,7 +190,7 @@ func hchatdata(ag *agent.Agent) http.HandlerFunc {
 					fmt.Println(err)
 				}
 				data.Filelist = filelist
-				render(w, hchatfilespage, data)
+				render(w, chatfilespage, data)
 			} else {
 				_, err := config.Load(ag, "Chats", query)
 				if err != nil {
@@ -213,7 +213,7 @@ func hchatdata(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hchatclear(ag *agent.Agent) http.HandlerFunc {
+func chatclear(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		newChat := []agent.Message{}
 		newChat = append(newChat, ag.Messages[0])
@@ -224,7 +224,7 @@ func hchatclear(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hreset(ag *agent.Agent) http.HandlerFunc {
+func reset(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		config.Reset(ag)
 		r.Method = http.MethodGet
@@ -233,7 +233,7 @@ func hreset(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hsettings(ag *agent.Agent) http.HandlerFunc {
+func settings(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			data := struct {
@@ -247,7 +247,7 @@ func hsettings(ag *agent.Agent) http.HandlerFunc {
 				Callcost:  config.CallCost,
 				ModelURL:  ag.Modelurl,
 			}
-			render(w, hsettingspage, data)
+			render(w, settingspage, data)
 		}
 		if r.Method == http.MethodPut {
 			apikey := r.FormValue("apikey")
@@ -266,10 +266,10 @@ func hsettings(ag *agent.Agent) http.HandlerFunc {
 	}
 }
 
-func hsidebar(w http.ResponseWriter, r *http.Request) {
+func sidebar(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Header().Set("HX-Trigger-After-Settle", `tokenupdate`)
-		render(w, hsidebarpage, nil)
+		render(w, sidebarpage, nil)
 	}
 	if r.Method == http.MethodDelete {
 		button := `<div class="sidebar" id="sidebar" style="width: 0; background-color: transparent;"><button id="floating-button" hx-get="/sidebar/" hx-target="#sidebar" hx-swap="outerHTML">Show Menu</button></div>`
@@ -277,7 +277,7 @@ func hsidebar(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func htokenupdate(ag *agent.Agent) http.HandlerFunc {
+func tokenupdate(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// fmt.Println("htokenupdate")
 		estcost := (float64(ag.Tokencount) / 1000) * config.CallCost

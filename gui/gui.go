@@ -13,27 +13,27 @@ import (
 func Gui(ag *agent.Agent) {
 	http.HandleFunc("/", RequireAuth(index))
 	http.HandleFunc("/auth/", hauth)
-	http.HandleFunc("/chat/", RequireAuth(hchat(ag)))
+	http.HandleFunc("/chat/", RequireAuth(chat(ag)))
 	http.HandleFunc("/chat/edit/", RequireAuth(chatedit(ag)))
-	http.HandleFunc("/chat/save/", RequireAuth(hchatsave(ag)))
-	http.HandleFunc("/chat/data/", RequireAuth(hchatdata(ag)))
-	http.HandleFunc("/chat/clear/", RequireAuth(hchatclear(ag)))
-	http.HandleFunc("/chat/reset/", RequireAuth(hreset(ag)))
-	http.HandleFunc("/settings/", RequireAuth(hsettings(ag)))
-	http.HandleFunc("/sidebar/", RequireAuth(hsidebar))
-	http.HandleFunc("/tokenupdate/", RequireAuth(htokenupdate(ag)))
-	http.HandleFunc("/prompt/", RequireAuth(hprompt(ag)))
-	http.HandleFunc("/prompt/data/", RequireAuth(hpromptdata(ag)))
-	http.HandleFunc("/function/", RequireAuth(hfunction(ag)))
-	http.HandleFunc("/function/data/", RequireAuth(hfunctiondata(ag)))
-	http.Handle("/static/", http.FileServer(http.FS(hcss)))
+	http.HandleFunc("/chat/save/", RequireAuth(chatsave(ag)))
+	http.HandleFunc("/chat/data/", RequireAuth(chatdata(ag)))
+	http.HandleFunc("/chat/clear/", RequireAuth(chatclear(ag)))
+	http.HandleFunc("/chat/reset/", RequireAuth(reset(ag)))
+	http.HandleFunc("/settings/", RequireAuth(settings(ag)))
+	http.HandleFunc("/sidebar/", RequireAuth(sidebar))
+	http.HandleFunc("/tokenupdate/", RequireAuth(tokenupdate(ag)))
+	http.HandleFunc("/prompt/", RequireAuth(prompt(ag)))
+	http.HandleFunc("/prompt/data/", RequireAuth(promptdata(ag)))
+	http.HandleFunc("/function/", RequireAuth(function(ag)))
+	http.HandleFunc("/function/data/", RequireAuth(functiondata(ag)))
+	http.Handle("/static/", http.FileServer(http.FS(css)))
 	fmt.Println("Running GUI on http://127.0.0.1"+config.Port, "(ctrl-click link to open)")
 	log.Fatal(http.ListenAndServe(config.Port, nil))
 	// log.Fatal(http.ListenAndServeTLS(port, "certificate.crt", "private.key", nil))
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	render(w, hindexpage, nil)
+	render(w, indexpage, nil)
 }
 
 func render(w http.ResponseWriter, html string, data any) {
@@ -99,7 +99,7 @@ func hauth(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	} else {
-		render(w, hauthpage, nil)
+		render(w, authpage, nil)
 	}
 }
 
