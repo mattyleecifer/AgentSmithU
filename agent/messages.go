@@ -18,6 +18,12 @@ type Message struct {
 	Content string `json:"content"`
 }
 
+type PromptDefinition struct {
+	Name        string
+	Description string
+	Parameters  string
+}
+
 func (m *Messages) Set(role, content string) {
 	// messages := *m
 	// messages = append(messages, Message{
