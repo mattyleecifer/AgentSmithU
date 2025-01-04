@@ -1,5 +1,8 @@
 ## AgentSmithU
 
+## Demos
+[Main Chat Page](demo/mainchat.png) | [Prompt Editor Menu](demo/prompteditor.png) | [Settings Menu](demo/settings.png)
+
 A forge for making agents - become an agentsmith!
 
 AgentSmith is a command-line tool, chat assistant (command-line and GUI), Python module, and IDE for using and creating AI Agents. It features everything you need to craft AI Agents and the ability to call these agents to complete tasks. Add AI functionality to any program with less than four lines of code. 
