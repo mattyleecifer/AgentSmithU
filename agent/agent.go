@@ -324,44 +324,6 @@ func (agent *Agent) Getresponse() (Message, error) {
 	return response, nil
 }
 
-func (agent *Agent) SetFunctionPrompt() {
-	// scan for functions and then add prompt for functions if detected
-	if len(agent.Functions) == 0 {
-		agent.Setprompt()
-		return
-	}
-
-	functionPrompt := agent.Prompt.Parameters + `
-	You have several tools that you can access through function calls. You can access these tools if you need more information or tools to help you answer queries.
-
-	To call a function, just begin your reply with "
-	**functioncall" followed by the name of the function and the parameters
-
-	Template:
-	**functioncall
-	{
-		"Name": "Name of function",
-		"Parameters": "Function parameters"
-	}
-
-	Example:
-	**functioncall
-	{
-		"Name": "browser",
-		"Parameters": "open"
-	}
-
-	You have the following functions available to you:
-	`
-	for _, function := range agent.Functions {
-		functionPrompt += "Name: " + function.Name + "\n"
-		functionPrompt += "Description: " + function.Description + "\n"
-		functionPrompt += "Parameters: " + function.Parameters + "\n"
-	}
-
-	agent.Setprompt(functionPrompt)
-}
-
 // experimental
 func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 	var chatresponse ChatResponse // convert response to text
