@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+type Functions []Function
+
 type Function struct {
 	Name        string
 	Description string

@@ -1,5 +1,7 @@
-// mostly defunct
 package main
+
+// mostly defunct
+// used to contain functions that have been split into other packages
 
 import (
 	"encoding/json"

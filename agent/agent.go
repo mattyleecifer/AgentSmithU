@@ -35,7 +35,7 @@ type Agent struct {
 	Modelurl   string
 	Maxtokens  int
 	Messages   Messages
-	Functions  []Function
+	Functions  Functions
 }
 
 type RequestBody struct {

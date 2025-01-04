@@ -6,8 +6,6 @@ AgentSmith is a command-line tool, chat assistant (command-line and GUI), Python
 
 Users can freely edit/save/load prompts, chats, and functions to experiment with responses. Agents have the ability to automatically request functions and can interact with literally any other program*. 
 
-*You may have to build an interface but there's tools/examples to cover that
-
 This is a fork of [AgentSmith](https://github.com/mattyleecifer/AgentSmith/) - I updated it so it can work with OpenAI, Mistral, Anthropic, and Ollama (plus anything that uses the OpenAI messages API format). It has a very experimental function that uses a local LLM to convert any unfamiliar API responses to OpenAI's messages API format so that it can read it - this is still a little janky, but it kind of works.
 
 I had to remove "Functions" functionality as that seems to be a more OpenAI specific thing, but I have ideas on how to bring it back. 
@@ -17,7 +15,6 @@ For now, basic chat functionality all works and you can build basic agents, just
 # 2025 note
 
 I have updated the package to be more organized/usable (lol). You will now be able to import agentsmithu/agent to create agents in golang (without using core.go like before). I'll probably be doing updates like this as I learn more about how to do things properly. 
-
 
 ### Features
 
@@ -37,8 +34,9 @@ Being able to remove/edit responses means you can remove redundant information t
 
 ### How to build agents
 
+Golang:
 ```golang
-import "AgentSmithU/agent"
+import "agentsmithu/agent"
 
 func main() {
     a := agent.New()
@@ -49,6 +47,22 @@ func main() {
 		fmt.Println(response.Content)
 	}
 }
+```
+
+Python:
+```python
+# Right now the agentsmith binary needs to be in the same working directory to run this
+from AgentSmith import Agent
+
+agent = Agent()
+
+agent.setprompt("You are Owen Wilson. You only respond with 'wow'")
+
+agent.addmessage("user", "What is the meaning of life?")
+
+response = agent.call()
+
+print(response)
 ```
 
 You can even chain agents within agents and get them to talk to each other.
