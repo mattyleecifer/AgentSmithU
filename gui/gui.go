@@ -12,7 +12,7 @@ import (
 
 func Gui(ag *agent.Agent) {
 	http.HandleFunc("/", RequireAuth(index))
-	http.HandleFunc("/auth/", hauth)
+	http.HandleFunc("/auth/", auth)
 	http.HandleFunc("/chat/", RequireAuth(chat(ag)))
 	http.HandleFunc("/chat/edit/", RequireAuth(chatedit(ag)))
 	http.HandleFunc("/chat/save/", RequireAuth(chatsave(ag)))
@@ -80,7 +80,7 @@ func RequireAuth(handler http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if config.AuthString != "" {
-			hauth(w, r)
+			auth(w, r)
 		}
 
 		// If the client's IP is not in the list of allowed IPs, return a 403 Forbidden error
@@ -89,7 +89,7 @@ func RequireAuth(handler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func hauth(w http.ResponseWriter, r *http.Request) {
+func auth(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		auth := r.FormValue("auth")
 		if auth == config.AuthString {

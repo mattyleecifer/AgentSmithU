@@ -62,8 +62,6 @@ Flags:
 
 This can be used to build a full agent. The Python module basically follows the same idea - you set the flags/messages and then make a call.
 
-*The app stores an encrypted API key in `homedir` by default. It will not do this if you specify a key with the `-key` flag.
-
 ## How to build agents
 
 Golang:
