@@ -1,6 +1,7 @@
-package main
+package console
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,7 +13,7 @@ import (
 	"github.com/atotto/clipboard"
 )
 
-func console(ag *agent.Agent) {
+func Console(ag *agent.Agent) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
@@ -165,4 +166,16 @@ func printnumberlines(ag *agent.Agent) {
 			fmt.Printf("%d. Assistant: %s\n", i, msg.Content)
 		}
 	}
+}
+
+func gettextinput() string {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		input := scanner.Text()
+		if len(input) == 0 {
+			return ""
+		}
+		return input
+	}
+	return ""
 }

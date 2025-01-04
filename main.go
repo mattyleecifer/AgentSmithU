@@ -3,6 +3,7 @@ package main
 import (
 	"AgentSmithU/agent"
 	"AgentSmithU/config"
+	"AgentSmithU/console"
 	"AgentSmithU/gui"
 	"fmt"
 )
@@ -16,11 +17,11 @@ func main() {
 
 	if config.GuiFlag {
 		fmt.Println("Running GUI...")
-		go console(a)
+		go console.Console(a)
 		gui.Gui(a)
 	} else if config.ConsoleFlag {
 		fmt.Println("Console only mode.")
-		console(a)
+		console.Console(a)
 	} else {
 		response, err := a.Getresponse()
 		if err != nil {

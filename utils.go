@@ -1,7 +1,7 @@
+// mostly defunct
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"os"
 )
@@ -188,15 +188,3 @@ func getsubrequest(input string) map[string]string {
 
 // 	return res, nil
 // }
-
-func gettextinput() string {
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		input := scanner.Text()
-		if len(input) == 0 {
-			return ""
-		}
-		return input
-	}
-	return ""
-}
