@@ -34,8 +34,14 @@ func (m *Messages) Set(role, content string) {
 	*m = append(*m, Message{Role: role, Content: content})
 }
 
+// Makes numbered messages empty
+// This 'clears' lines to '_'
+// Deleting lines is a two-step process because I needed a way to
+// keep track of what was deleted in the gui - it was basically a choice
+// between reloading the page each delete (ie rewriting/resyncing html/
+// backend index) or keeping a record of cleared lines and refreshing
+// only on reload
 func (m *Messages) Clearlines(editchoice string) error {
-	// Makes numbered messages empty
 	// Use regular expression to find all numerical segments in the input string
 	reg := regexp.MustCompile("[0-9]+")
 	nums := reg.FindAllString(editchoice, -1)
@@ -69,6 +75,9 @@ func (m *Messages) Clearlines(editchoice string) error {
 	return nil
 }
 
+// Deletes lines marked for deletion
+// Clearlines marks lines for deletion with a '_' - Deletelines
+// is used to actually remove them on page reload for gui
 func (m *Messages) Deletelines() {
 	messages := *m
 	// remove empty messages
