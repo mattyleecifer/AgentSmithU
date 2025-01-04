@@ -2,6 +2,8 @@ package main
 
 import (
 	"AgentSmithU/agent"
+	"AgentSmithU/config"
+	"AgentSmithU/gui"
 	"fmt"
 )
 
@@ -10,13 +12,13 @@ import (
 func main() {
 	// agent := agent.Agent{}
 	a := agent.New()
-	getflags(a)
+	config.GetFlags(a)
 
-	if guiFlag {
+	if config.GuiFlag {
 		fmt.Println("Running GUI...")
 		go console(a)
-		gui(a)
-	} else if consoleFlag {
+		gui.Gui(a)
+	} else if config.ConsoleFlag {
 		fmt.Println("Console only mode.")
 		console(a)
 	} else {
@@ -25,8 +27,8 @@ func main() {
 			fmt.Println(err)
 		}
 		fmt.Println(response.Content)
-		if savechatName != "" {
-			savefile(a.Messages, "Chats")
+		if config.SaveChatName != "" {
+			config.Save(a.Messages, "Chats")
 		}
 	}
 }

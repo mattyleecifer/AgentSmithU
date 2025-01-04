@@ -6,12 +6,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	. "AgentSmithU/agent"
+	"AgentSmithU/agent"
+	"AgentSmithU/config"
 
 	"github.com/atotto/clipboard"
 )
 
-func console(agent *Agent) {
+func console(ag *agent.Agent) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
@@ -29,33 +30,33 @@ func console(agent *Agent) {
 
 				input := gettextinput()
 
-				text := process_text(agent, input)
+				text := process_text(ag, input)
 
 				if text == "" {
 					continue
 				}
 
-				query := Message{
-					Role:    RoleUser,
+				query := agent.Message{
+					Role:    agent.RoleUser,
 					Content: text,
 				}
 
-				agent.Messages = append(agent.Messages, query)
+				ag.Messages = append(ag.Messages, query)
 
 				for {
 					// retries response until it works
-					response, err := agent.Getresponse()
+					response, err := ag.Getresponse()
 					if err != nil {
 						fmt.Println(err)
 						continue
 					}
 
-					estcost := (float64(agent.Tokencount) / 1000) * callcost
+					estcost := (float64(ag.Tokencount) / 1000) * config.CallCost
 
 					fmt.Println("\nAssistant:")
 					fmt.Println(response.Content)
 
-					fmt.Println("\nTokencount: ", agent.Tokencount, " Est. Cost: ", estcost)
+					fmt.Println("\nTokencount: ", ag.Tokencount, " Est. Cost: ", estcost)
 					break
 				}
 			}
@@ -63,17 +64,17 @@ func console(agent *Agent) {
 	}
 }
 
-func process_text(agent *Agent, text string) string {
+func process_text(ag *agent.Agent, text string) string {
 	switch text {
 	case "q", "quit":
 		fmt.Println("\nQuitting...")
 		os.Exit(0)
 	case "del", "delete", "!":
-		agent.Setprompt()
+		ag.Setprompt()
 		fmt.Println("\nChat cleared!")
 		return ""
 	case "reset":
-		Reset(agent)
+		config.Reset(ag)
 		fmt.Println("\nChat reset!")
 		return ""
 	case "paste":
@@ -85,7 +86,7 @@ func process_text(agent *Agent, text string) string {
 		fmt.Println("\nPasted text!")
 		return text
 	case "copy":
-		response := agent.Messages[len(agent.Messages)].Content
+		response := ag.Messages[len(ag.Messages)].Content
 		err := clipboard.WriteAll(response)
 		if err != nil {
 			fmt.Println(err)
@@ -93,29 +94,29 @@ func process_text(agent *Agent, text string) string {
 		fmt.Println("\nCopied text!")
 		return ""
 	case "@", "sel", "select":
-		printnumberlines(agent)
+		printnumberlines(ag)
 		fmt.Println("\nWhich lines would you like to delete?")
 		editchoice := gettextinput()
 		if editchoice == "" {
 			return ""
 		}
-		agent.Messages.Clearlines(editchoice)
+		ag.Messages.Clearlines(editchoice)
 		// messages.Clearlines(agent, editchoice)
 		// agent.Clearlines(editchoice)
-		agent.Messages.Deletelines()
+		ag.Messages.Deletelines()
 		// messages.Deletelines(agent)
 		// agent.Deletelines()
-		printnumberlines(agent)
+		printnumberlines(ag)
 		fmt.Println("Lines deleted!")
 		return ""
 	case "save":
-		_, err := savefile(agent.Messages, "Chats")
+		_, err := config.Save(ag.Messages, "Chats")
 		if err != nil {
 			fmt.Println(err)
 		}
 		return ""
 	case "load":
-		_, err := getsavefilelist("Chats")
+		_, err := config.GetSaveFileList("Chats")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -124,7 +125,7 @@ func process_text(agent *Agent, text string) string {
 		if filename == "" {
 			return ""
 		}
-		_, err = loadfile(agent, "Chats", filename)
+		_, err = config.Load(ag, "Chats", filename)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -138,13 +139,13 @@ func process_text(agent *Agent, text string) string {
 				fmt.Println(err)
 				return ""
 			}
-			agent.Prompt.Parameters = text
+			ag.Prompt.Parameters = text
 		} else {
 			text := input
-			agent.Prompt.Parameters = text
+			ag.Prompt.Parameters = text
 
 		}
-		agent.Setprompt()
+		ag.Setprompt()
 		fmt.Println("\nPrompt edited!")
 		return ""
 	case "help":
@@ -156,11 +157,11 @@ func process_text(agent *Agent, text string) string {
 	return text
 }
 
-func printnumberlines(agent *Agent) {
-	for i, msg := range agent.Messages {
-		if msg.Role == RoleUser {
+func printnumberlines(ag *agent.Agent) {
+	for i, msg := range ag.Messages {
+		if msg.Role == agent.RoleUser {
 			fmt.Printf("%d. User: %s\n", i, msg.Content)
-		} else if msg.Role == RoleAssistant {
+		} else if msg.Role == agent.RoleAssistant {
 			fmt.Printf("%d. Assistant: %s\n", i, msg.Content)
 		}
 	}

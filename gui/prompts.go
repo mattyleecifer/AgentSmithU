@@ -1,16 +1,17 @@
-package main
+package gui
 
 // create, edit, and make prompt calls - this will allow users to make commandline or api promptcalls.
 
 import (
-	. "AgentSmithU/agent"
+	"AgentSmithU/agent"
+	"AgentSmithU/config"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 )
 
-func hprompt(agent *Agent) http.HandlerFunc {
+func hprompt(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			var data struct {
@@ -20,23 +21,23 @@ func hprompt(agent *Agent) http.HandlerFunc {
 				Savedprompts []string
 			}
 
-			data.Name = agent.Prompt.Name
-			data.Description = agent.Prompt.Description
-			data.Parameters = agent.Messages[0].Content
-			data.Savedprompts, _ = getsavefilelist("Prompts")
+			data.Name = ag.Prompt.Name
+			data.Description = ag.Prompt.Description
+			data.Parameters = ag.Messages[0].Content
+			data.Savedprompts, _ = config.GetSaveFileList("Prompts")
 
 			render(w, hpromptspage, data)
 		}
 
 		if r.Method == http.MethodPost {
-			newprompt := PromptDefinition{
+			newprompt := agent.PromptDefinition{
 				Name:        r.FormValue("promptname"),
 				Description: r.FormValue("promptdescription"),
 				Parameters:  r.FormValue("edittext"),
 			}
 
-			agent.Prompt = newprompt
-			agent.Setprompt()
+			ag.Prompt = newprompt
+			ag.Setprompt()
 
 			w.Header().Set("HX-Redirect", "/")
 			// r.Method = http.MethodGet
@@ -45,7 +46,7 @@ func hprompt(agent *Agent) http.HandlerFunc {
 	}
 }
 
-func hpromptdata(agent *Agent) http.HandlerFunc {
+func hpromptdata(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := strings.TrimPrefix(r.URL.Path, "/prompt/data/")
 
@@ -57,9 +58,9 @@ func hpromptdata(agent *Agent) http.HandlerFunc {
 				Savedprompts []string
 			}
 
-			prompt := PromptDefinition{}
+			prompt := agent.PromptDefinition{}
 
-			loaddata, err := loadfile(agent, "Prompts", query)
+			loaddata, err := config.Load(ag, "Prompts", query)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -69,19 +70,19 @@ func hpromptdata(agent *Agent) http.HandlerFunc {
 			data.Name = prompt.Name
 			data.Description = prompt.Description
 			data.Parameters = prompt.Parameters
-			data.Savedprompts, _ = getsavefilelist("Prompts")
+			data.Savedprompts, _ = config.GetSaveFileList("Prompts")
 
 			render(w, hpromptspage, data)
 		}
 
 		if r.Method == http.MethodPost {
-			newprompt := PromptDefinition{
+			newprompt := agent.PromptDefinition{
 				Name:        r.FormValue("promptname"),
 				Description: r.FormValue("promptdescription"),
 				Parameters:  r.FormValue("edittext"),
 			}
 
-			savefile(newprompt, "Prompts", newprompt.Name)
+			config.Save(newprompt, "Prompts", newprompt.Name)
 
 			htmldata := `
 		<div id="prompt-` + newprompt.Name + `" hx-swap-oob="delete"></div>
@@ -98,7 +99,7 @@ func hpromptdata(agent *Agent) http.HandlerFunc {
 		}
 
 		if r.Method == http.MethodDelete {
-			deletefile("Prompts", query)
+			config.Delete("Prompts", query)
 		}
 	}
 }

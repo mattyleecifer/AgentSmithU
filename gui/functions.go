@@ -1,9 +1,10 @@
-package main
+package gui
 
 // create, edit, and make function calls
 
 import (
-	. "AgentSmithU/agent"
+	"AgentSmithU/agent"
+	"AgentSmithU/config"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -12,7 +13,7 @@ import (
 	"strings"
 )
 
-func hfunction(agent *Agent) http.HandlerFunc {
+func hfunction(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			type Funcdef struct {
@@ -25,7 +26,7 @@ func hfunction(agent *Agent) http.HandlerFunc {
 				Savedfunctions   []string
 			}
 
-			for _, item := range agent.Functions {
+			for _, item := range ag.Functions {
 				newfunc := Funcdef{
 					Name:        item.Name,
 					Description: item.Description,
@@ -33,18 +34,18 @@ func hfunction(agent *Agent) http.HandlerFunc {
 				data.Currentfunctions = append(data.Currentfunctions, newfunc)
 			}
 
-			data.Savedfunctions, _ = getsavefilelist("Functions")
+			data.Savedfunctions, _ = config.GetSaveFileList("Functions")
 			render(w, hfunctionpage, data)
 		}
 
 		if r.Method == http.MethodPost {
-			newfunction := Function{
+			newfunction := agent.Function{
 				Name:        r.FormValue("functionname"),
 				Description: r.FormValue("functiondescription"),
 				Parameters:  r.FormValue("edittext"),
 			}
 
-			agent.AddFunction(newfunction)
+			ag.AddFunction(newfunction)
 
 			w.Header().Set("HX-Redirect", "/function/")
 			// r.Method = http.MethodGet
@@ -54,9 +55,9 @@ func hfunction(agent *Agent) http.HandlerFunc {
 		query := strings.TrimPrefix(r.URL.Path, "/function/")
 
 		if r.Method == http.MethodPatch {
-			var data Function
+			var data agent.Function
 			if query != "" {
-				for _, function := range agent.Functions {
+				for _, function := range ag.Functions {
 					if query == function.Name {
 						data.Name = function.Name
 						data.Description = function.Description
@@ -69,7 +70,7 @@ func hfunction(agent *Agent) http.HandlerFunc {
 		}
 
 		if r.Method == http.MethodDelete {
-			agent.RemoveFunction(query)
+			ag.RemoveFunction(query)
 
 			// looks like this reloads the page, edit to make it not
 			r.Method = http.MethodGet
@@ -79,14 +80,14 @@ func hfunction(agent *Agent) http.HandlerFunc {
 	}
 }
 
-func hfunctiondata(agent *Agent) http.HandlerFunc {
+func hfunctiondata(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := strings.TrimPrefix(r.URL.Path, "/function/data/")
 
 		if r.Method == http.MethodGet {
-			var newfunction Function
+			var newfunction agent.Function
 			functionname := query
-			filedata, err := loadfile(agent, "Functions", functionname)
+			filedata, err := config.Load(ag, "Functions", functionname)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -97,19 +98,19 @@ func hfunctiondata(agent *Agent) http.HandlerFunc {
 				return
 			}
 
-			agent.AddFunction(newfunction)
+			ag.AddFunction(newfunction)
 			// agent.hfunction(w, r)
 			w.Header().Set("HX-Redirect", "/function/")
 		}
 
 		if r.Method == http.MethodPost {
-			newfunction := Function{
+			newfunction := agent.Function{
 				Name:        r.FormValue("functionname"),
 				Description: r.FormValue("functiondescription"),
 				Parameters:  r.FormValue("edittext"),
 			}
 
-			savefile(newfunction, "Functions", newfunction.Name)
+			config.Save(newfunction, "Functions", newfunction.Name)
 
 			// should add to page rather than reload like in prompts
 			// reloads page
@@ -120,7 +121,7 @@ func hfunctiondata(agent *Agent) http.HandlerFunc {
 
 		if r.Method == http.MethodDelete {
 			functionname := query
-			deletefile("Functions", functionname)
+			config.Delete("Functions", functionname)
 
 			// reloads page
 			w.Header().Set("HX-Redirect", "/function/")
@@ -129,15 +130,15 @@ func hfunctiondata(agent *Agent) http.HandlerFunc {
 	}
 }
 
-func hfunctionrun(agent *Agent) http.HandlerFunc {
+func hfunctionrun(ag *agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rawquery := strings.TrimPrefix(r.URL.Path, "/function/run/")
 		query := strings.Split(rawquery, "/")
 		fmt.Println(rawquery, query)
 
-		var function Function
+		var function agent.Function
 
-		for _, f := range agent.Functions {
+		for _, f := range ag.Functions {
 			if f.Name == query[0] {
 				function = f
 				break
@@ -148,7 +149,7 @@ func hfunctionrun(agent *Agent) http.HandlerFunc {
 			return
 		}
 
-		response := agent.RunFunction(function)
+		response := ag.RunFunction(function)
 
 		w.Header().Set("HX-Trigger-After-Settle", `tokenupdate`)
 
@@ -160,9 +161,9 @@ func hfunctionrun(agent *Agent) http.HandlerFunc {
 			Function string
 		}
 		data.Header = template.HTML(`<div id="message" class="message" style="background-color: #393939">`)
-		data.Role = RoleAssistant
+		data.Role = agent.RoleAssistant
 		data.Content = response.Content
-		data.Index = strconv.Itoa(len(agent.Messages) - 1)
+		data.Index = strconv.Itoa(len(ag.Messages) - 1)
 		render(w, hchatnewpage, data)
 	}
 }
