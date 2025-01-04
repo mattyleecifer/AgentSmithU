@@ -1,3 +1,4 @@
+// Package agent provides core components to create and run an agent
 package agent
 
 import (
@@ -11,9 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -46,14 +45,15 @@ type Agent struct {
 	Model      string
 	Modelurl   string
 	Maxtokens  int
-	Messages   []Message
-	Functions  []Function
+	// Messages   []Message
+	Messages  Messages
+	Functions []Function
 }
 
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
+// type Message struct {
+// 	Role    string `json:"role"`
+// 	Content string `json:"content"`
+// }
 
 type RequestBody struct {
 	Model      string    `json:"model"`
@@ -129,7 +129,7 @@ func (agent *Agent) GetmodelURL() string {
 }
 
 // Creates new Agent with default settings
-func New() Agent {
+func New() *Agent {
 	var today = time.Now().Format("January 2, 2006")
 	agent := Agent{}
 
@@ -147,7 +147,7 @@ func New() Agent {
 	// Set Tokencount
 	agent.Tokencount = 0
 
-	return agent
+	return &agent
 }
 
 // defunc
@@ -171,18 +171,21 @@ func New() Agent {
 // 	return agent
 // }
 
-func (agent *Agent) Setmessage(role, content string) {
-	message := Message{
-		Role:    role,
-		Content: content,
-	}
-	agent.Messages = append(agent.Messages, message)
-}
+// func (agent *Agent) Setmessage(role, content string) {
+// 	agent.Messages = append(agent.Messages, Message{
+// 		Role:    role,
+// 		Content: content,
+// 	})
+// }
 
 // Sets prompt - note that this does not change the rest of the messages in a conversation
 func (agent *Agent) Setprompt(prompt ...string) {
 	if len(agent.Messages) == 0 {
-		agent.Setmessage(RoleSystem, "")
+
+		// RoleAssistant, not RoleSystem here because some models can't handle it
+		agent.Messages.Set(RoleAssistant, "")
+		// messages.Set(agent, RoleAssistant, "")
+		// agent.Setmessage(RoleAssistant, "")
 	}
 	if len(prompt) == 0 {
 		agent.Messages[0].Content = agent.Prompt.Parameters
@@ -483,7 +486,9 @@ func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 	converter.Setprompt(`Extract the text/message data from any inputs. Output only the text/message data without any commentary. Do not change anything. Output the text/message data exactly as it is written in the original data`)
 
 	// attempt to get response convertered
-	converter.Setmessage(RoleUser, jsonStr)
+	converter.Messages.Set(RoleUser, jsonStr)
+	// messages.Set(converter, RoleUser, jsonStr)
+	// converter.Setmessage(RoleUser, jsonStr)
 
 	response, err := converter.Getresponse()
 	if err != nil {
@@ -502,56 +507,6 @@ func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 	chatresponse.Choices = append(chatresponse.Choices, newChoice)
 
 	return chatresponse, nil
-}
-
-// fix these
-
-func (agent *Agent) Clearlines(editchoice string) error {
-	// Makes numbered messages empty
-	// Use regular expression to find all numerical segments in the input string
-	reg := regexp.MustCompile("[0-9]+")
-	nums := reg.FindAllString(editchoice, -1)
-
-	var sortednums []int
-	// Convert each numerical string to integer and sort
-	for _, numStr := range nums {
-		num, err := strconv.Atoi(numStr)
-		if err != nil {
-			return err
-		}
-		sortednums = append(sortednums, num)
-	}
-
-	sort.Ints(sortednums)
-
-	fmt.Println("Deleting lines: ", sortednums)
-
-	// go from highest to lowest to not fu the order
-	// for i := len(sortednums) - 1; i >= 0; i-- {
-	// 	agent.Messages = append(agent.Messages[:sortednums[i]], agent.Messages[sortednums[i]+1:]...)
-	// }
-
-	for _, num := range sortednums {
-		agent.Messages[num].Content = "_"
-	}
-
-	return nil
-}
-
-func (agent *Agent) Deletelines() {
-	// remove empty messages
-	// figure out what they are first
-	var emptymessages []int
-	for i, item := range agent.Messages[1:] {
-		if item.Content == "_" {
-			emptymessages = append(emptymessages, i)
-		}
-	}
-	// sort the numbers and start from top
-	sort.Ints(emptymessages)
-	for i := len(emptymessages) - 1; i >= 0; i-- {
-		agent.Messages = append(agent.Messages[:emptymessages[i]+1], agent.Messages[emptymessages[i]+2:]...)
-	}
 }
 
 // func (agent *Agent) loadFunction(filename string) (Function, error) {

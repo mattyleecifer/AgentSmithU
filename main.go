@@ -10,15 +10,15 @@ import (
 func main() {
 	// agent := agent.Agent{}
 	a := agent.New()
-	getflags(&a)
+	getflags(a)
 
 	if guiFlag {
 		fmt.Println("Running GUI...")
-		go console(&a)
-		gui(&a)
+		go console(a)
+		gui(a)
 	} else if consoleFlag {
 		fmt.Println("Console only mode.")
-		console(&a)
+		console(a)
 	} else {
 		response, err := a.Getresponse()
 		if err != nil {

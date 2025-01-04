@@ -32,7 +32,9 @@ func hchat(agent *Agent) http.HandlerFunc {
 			}
 
 			// remove empty messages
-			agent.Deletelines()
+			agent.Messages.Deletelines()
+			// messages.Deletelines(agent)
+			// agent.Deletelines()
 
 			// Check what to display
 			if len(agent.Messages) == 1 {
@@ -144,7 +146,9 @@ func chatedit(agent *Agent) http.HandlerFunc {
 		}
 
 		if r.Method == http.MethodDelete {
-			err := agent.Clearlines(query)
+			err := agent.Messages.Clearlines(query)
+			// err := messages.Clearlines(agent, query)
+			// err := agent.Clearlines(query)
 			if err != nil {
 				fmt.Println(err)
 			}

@@ -197,10 +197,14 @@ func getflags(agent *Agent) {
 		case "-message":
 			// Get the argument after the flag]
 			// Set messages for the agent/create chat history
-			agent.Setmessage(RoleUser, arg)
+			agent.Messages.Set(RoleUser, arg)
+			// messages.Set(agent, RoleUser, arg)
+			// agent.Setmessage(RoleUser, arg)
 		case "-messageassistant":
 			// Allows multiple messages with different users to be loaded in order
-			agent.Setmessage(RoleAssistant, arg)
+			agent.Messages.Set(RoleAssistant, arg)
+			// messages.Set(agent, RoleAssistant, arg)
+			// agent.Setmessage(RoleAssistant, arg)
 		case "--gui":
 			// Run GUI
 			guiFlag = true
@@ -441,6 +445,6 @@ func gettextinput() string {
 }
 
 func Reset(agent *Agent) {
-	*agent = New()
+	agent = New()
 	callcost = 0.002
 }
