@@ -3,8 +3,8 @@ package gui
 // create, edit, and make prompt calls - this will allow users to make commandline or api promptcalls.
 
 import (
-	"AgentSmithU/agent"
-	"AgentSmithU/config"
+	"agentsmithu/agent"
+	"agentsmithu/config"
 	"encoding/json"
 	"fmt"
 	"net/http"

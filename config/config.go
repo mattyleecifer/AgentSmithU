@@ -1,7 +1,7 @@
 package config
 
 import (
-	"AgentSmithU/agent"
+	"agentsmithu/agent"
 	"fmt"
 	"os"
 	"os/user"
@@ -193,12 +193,12 @@ func GetFlags(ag *agent.Agent) {
 		case "-message":
 			// Get the argument after the flag]
 			// Set messages for the agent/create chat history
-			ag.Messages.Set(agent.RoleUser, arg)
+			ag.Messages.Add(agent.RoleUser, arg)
 			// messages.Set(agent, RoleUser, arg)
 			// agent.Setmessage(RoleUser, arg)
 		case "-messageassistant":
 			// Allows multiple messages with different users to be loaded in order
-			ag.Messages.Set(agent.RoleAssistant, arg)
+			ag.Messages.Add(agent.RoleAssistant, arg)
 			// messages.Set(agent, RoleAssistant, arg)
 			// agent.Setmessage(RoleAssistant, arg)
 		case "--gui":

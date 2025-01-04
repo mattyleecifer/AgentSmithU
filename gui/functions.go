@@ -3,8 +3,8 @@ package gui
 // create, edit, and make function calls
 
 import (
-	"AgentSmithU/agent"
-	"AgentSmithU/config"
+	"agentsmithu/agent"
+	"agentsmithu/config"
 	"encoding/json"
 	"fmt"
 	"html/template"

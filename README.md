@@ -8,7 +8,7 @@ Users can freely edit/save/load prompts, chats, and functions to experiment with
 
 *You may have to build an interface but there's tools/examples to cover that
 
-This is a fork of [AgentSmith](https://github.com/mattyleecifer/AgentSmith/) = I updated it so it can work with OpenAI, Mistral, Anthropic, and Ollama (plus anything that uses the OpenAI messages API format). It has a very experimental function that uses a local LLM to convert any unfamiliar API responses to OpenAI's messages API format so that it can read it - this is still a little janky, but it kind of works.
+This is a fork of [AgentSmith](https://github.com/mattyleecifer/AgentSmith/) - I updated it so it can work with OpenAI, Mistral, Anthropic, and Ollama (plus anything that uses the OpenAI messages API format). It has a very experimental function that uses a local LLM to convert any unfamiliar API responses to OpenAI's messages API format so that it can read it - this is still a little janky, but it kind of works.
 
 I had to remove "Functions" functionality as that seems to be a more OpenAI specific thing, but I have ideas on how to bring it back. 
 
@@ -21,6 +21,7 @@ I have updated the package to be more organized/usable (lol). You will now be ab
 
 ### Features
 
+- **Easy AI Integration in Golang (and Python)** - Initialize an agent, set a prompt, and receive outputs from almost any AI API.
 - **Chat** - You can chat with it like any OpenAI chatbot
 - **CLI and GUI** - You can interact with AgentSmith via the CLI or GUI. The CLI is mostly just for chat, but there are a few handy functions in there - type 'help' to see an overview
 - **Edit/delete/save/load chats** - Allows you to easily modify chats (even change the AI's response) and store/retrieve them for later use
@@ -36,23 +37,33 @@ Being able to remove/edit responses means you can remove redundant information t
 
 ### How to build agents
 
-# This will need a rewrite with the new version
+```golang
+import "AgentSmithU/agent"
 
-Look at `/examples` for an examples on how to build simple agents in Golang and Python. The plugins are also good examples for how to build interfaces for the agent to call to access other programs.
+func main() {
+    a := agent.New()
+	a.Setprompt("You are Owen Wilsonbot and will respond with only 'wow'")
+	a.Messages.Add(agent.RoleUser, "How are you?")
+	response, err := a.Getresponse()
+	if err != nil {
+		fmt.Println(response.Content)
+	}
+}
+```
 
-`core.go` contains everything you need to build an agent in Go. The `AgentSmith.py` contains everything you need to build an agent in Python. It takes less than four lines of code.
-
-The agents are able to make/receive/process data in whichever way they're programmed - you can even chain agents within agents and get them to talk to each other.
+You can even chain agents within agents and get them to talk to each other.
 
 This allows anyone to easily create complex AI apps with multiple agents all with different prompts/functions that can work together to do anything.
 
 ### How to run
 
-To run as just a command-line chat, run `agentsmith --console`
+You will need to have go installed/run go build to build the binary.
 
-To start the GUI, you just have to run: `agentsmith --gui`
+To run as just a command-line chat, run `agentsmithu --console`
 
-(Or `agentsmith.exe --gui` on Windows, etc.)
+To start the GUI, you just have to run: `agentsmithu --gui`
+
+(Or `agentsmithu.exe --gui` on Windows, etc.)
 
 This will start a server at http://127.0.0.1:49327 - the server is secured so only localhost can connect to it. To allow external connections, launch the app with `-ip <ipaddress>` or `-allowallips`. Use `-port` to specify port.
 
@@ -72,8 +83,6 @@ Flags:
 - `-messageassistant` add message from assistant to chat
 
 This can be used to build a full agent. The Python module basically follows the same idea - you set the flags/messages and then make a call.
-
-If you want to build from source, you might want to change the PGP keys in `core.go` (this protects your API key*) or set your API key manually in the code. Then it's just `go build` and run.
 
 *The app stores an encrypted API key in `homedir` by default. It will not do this if you specify a key with the `-key` flag.
 

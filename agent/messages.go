@@ -24,7 +24,7 @@ type PromptDefinition struct {
 	Parameters  string
 }
 
-func (m *Messages) Set(role, content string) {
+func (m *Messages) Add(role, content string) {
 	// messages := *m
 	// messages = append(messages, Message{
 	// 	Role:    role,

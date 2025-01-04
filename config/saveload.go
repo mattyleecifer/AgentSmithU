@@ -1,7 +1,7 @@
 package config
 
 import (
-	"AgentSmithU/agent"
+	"agentsmithu/agent"
 	"encoding/json"
 	"fmt"
 	"io"

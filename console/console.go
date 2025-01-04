@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"AgentSmithU/agent"
-	"AgentSmithU/config"
+	"agentsmithu/agent"
+	"agentsmithu/config"
 
 	"github.com/atotto/clipboard"
 )

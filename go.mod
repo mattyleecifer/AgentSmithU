@@ -1,4 +1,4 @@
-module AgentSmithU
+module agentsmithu
 
 go 1.21.1
 

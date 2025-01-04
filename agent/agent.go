@@ -166,7 +166,7 @@ func (agent *Agent) Setprompt(prompt ...string) {
 	if len(agent.Messages) == 0 {
 
 		// RoleAssistant, not RoleSystem here because some models can't handle it
-		agent.Messages.Set(RoleAssistant, "")
+		agent.Messages.Add(RoleAssistant, "")
 		// messages.Set(agent, RoleAssistant, "")
 		// agent.Setmessage(RoleAssistant, "")
 	}
@@ -410,7 +410,7 @@ func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 	converter.Setprompt(`Extract the text/message data from any inputs. Output only the text/message data without any commentary. Do not change anything. Output the text/message data exactly as it is written in the original data`)
 
 	// attempt to get response convertered
-	converter.Messages.Set(RoleUser, jsonStr)
+	converter.Messages.Add(RoleUser, jsonStr)
 	// messages.Set(converter, RoleUser, jsonStr)
 	// converter.Setmessage(RoleUser, jsonStr)
 

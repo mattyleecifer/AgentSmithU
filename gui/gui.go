@@ -1,8 +1,8 @@
 package gui
 
 import (
-	"AgentSmithU/agent"
-	"AgentSmithU/config"
+	"agentsmithu/agent"
+	"agentsmithu/config"
 	"fmt"
 	"html/template"
 	"log"

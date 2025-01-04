@@ -1,17 +1,14 @@
 package main
 
 import (
-	"AgentSmithU/agent"
-	"AgentSmithU/config"
-	"AgentSmithU/console"
-	"AgentSmithU/gui"
+	"agentsmithu/agent"
+	"agentsmithu/config"
+	"agentsmithu/console"
+	"agentsmithu/gui"
 	"fmt"
 )
 
-// type Agent agent.Agent
-
 func main() {
-	// agent := agent.Agent{}
 	a := agent.New()
 	config.GetFlags(a)
 
