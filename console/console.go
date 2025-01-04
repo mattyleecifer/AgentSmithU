@@ -102,11 +102,7 @@ func process_text(ag *agent.Agent, text string) string {
 			return ""
 		}
 		ag.Messages.Clearlines(editchoice)
-		// messages.Clearlines(agent, editchoice)
-		// agent.Clearlines(editchoice)
 		ag.Messages.Deletelines()
-		// messages.Deletelines(agent)
-		// agent.Deletelines()
 		printnumberlines(ag)
 		fmt.Println("Lines deleted!")
 		return ""

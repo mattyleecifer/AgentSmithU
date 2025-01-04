@@ -194,13 +194,9 @@ func GetFlags(ag *agent.Agent) {
 			// Get the argument after the flag]
 			// Set messages for the agent/create chat history
 			ag.Messages.Add(agent.RoleUser, arg)
-			// messages.Set(agent, RoleUser, arg)
-			// agent.Setmessage(RoleUser, arg)
 		case "-messageassistant":
 			// Allows multiple messages with different users to be loaded in order
 			ag.Messages.Add(agent.RoleAssistant, arg)
-			// messages.Set(agent, RoleAssistant, arg)
-			// agent.Setmessage(RoleAssistant, arg)
 		case "--gui":
 			// Run GUI
 			GuiFlag = true

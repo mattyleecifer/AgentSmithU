@@ -34,15 +34,9 @@ type Agent struct {
 	Model      string
 	Modelurl   string
 	Maxtokens  int
-	// Messages   []Message
-	Messages  Messages
-	Functions []Function
+	Messages   Messages
+	Functions  []Function
 }
-
-// type Message struct {
-// 	Role    string `json:"role"`
-// 	Content string `json:"content"`
-// }
 
 type RequestBody struct {
 	Model      string    `json:"model"`
@@ -133,42 +127,12 @@ func New() *Agent {
 	return &agent
 }
 
-// defunc
-// func NewAgent(key ...string) Agent {
-// 	var today = time.Now().Format("January 2, 2006")
-// 	agent := Agent{}
-// 	agent.Prompt = defaultprompt
-// 	agent.Prompt.Parameters += today
-// 	agent.Maxtokens = 2048
-// 	agent.Setprompt()
-// 	if agent.Model == "" {
-// 		agent.Model = defaultmodel
-// 	}
-// 	agent.Tokencount = 0
-// 	// agent.ags()
-// 	if agent.Api_key == "" {
-// 		if len(key) == 0 {
-// 			// agent.getkey()
-// 		}
-// 	}
-// 	return agent
-// }
-
-// func (agent *Agent) Setmessage(role, content string) {
-// 	agent.Messages = append(agent.Messages, Message{
-// 		Role:    role,
-// 		Content: content,
-// 	})
-// }
-
 // Sets prompt - note that this does not change the rest of the messages in a conversation
 func (agent *Agent) Setprompt(prompt ...string) {
 	if len(agent.Messages) == 0 {
 
 		// RoleAssistant, not RoleSystem here because some models can't handle it
 		agent.Messages.Add(RoleAssistant, "")
-		// messages.Set(agent, RoleAssistant, "")
-		// agent.Setmessage(RoleAssistant, "")
 	}
 	if len(prompt) == 0 {
 		agent.Messages[0].Content = agent.Prompt.Parameters
@@ -411,8 +375,6 @@ func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 
 	// attempt to get response convertered
 	converter.Messages.Add(RoleUser, jsonStr)
-	// messages.Set(converter, RoleUser, jsonStr)
-	// converter.Setmessage(RoleUser, jsonStr)
 
 	response, err := converter.Getresponse()
 	if err != nil {

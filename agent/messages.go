@@ -24,13 +24,8 @@ type PromptDefinition struct {
 	Parameters  string
 }
 
+// Add new message to message chain
 func (m *Messages) Add(role, content string) {
-	// messages := *m
-	// messages = append(messages, Message{
-	// 	Role:    role,
-	// 	Content: content,
-	// })
-	// m = &messages
 	*m = append(*m, Message{Role: role, Content: content})
 }
 
@@ -57,8 +52,7 @@ func (m *Messages) Clearlines(editchoice string) error {
 	}
 
 	sort.Ints(sortednums)
-
-	fmt.Println("Deleting lines: ", sortednums)
+	fmt.Println("Clearing lines: ", sortednums)
 
 	// go from highest to lowest to not fu the order
 	// for i := len(sortednums) - 1; i >= 0; i-- {
@@ -83,17 +77,18 @@ func (m *Messages) Deletelines() {
 	// remove empty messages
 	// figure out what they are first
 	var emptymessages []int
-	// for i, item := range messages[1:] {
 	for i, item := range messages {
 		if item.Content == "_" {
 			emptymessages = append(emptymessages, i)
 		}
 	}
+
 	// sort the numbers and start from top
 	sort.Ints(emptymessages)
+	fmt.Println("Deleting lines: ", emptymessages)
+
 	for i := len(emptymessages) - 1; i >= 0; i-- {
 		messages = append(messages[:emptymessages[i]], messages[emptymessages[i]+1:]...)
-		// messages = append(messages[:emptymessages[i]+1], messages[emptymessages[i]+2:]...)
 	}
 	*m = messages
 }

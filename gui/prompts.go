@@ -40,8 +40,6 @@ func hprompt(ag *agent.Agent) http.HandlerFunc {
 			ag.Setprompt()
 
 			w.Header().Set("HX-Redirect", "/")
-			// r.Method = http.MethodGet
-			// agent.hchat(w, r)
 		}
 	}
 }
