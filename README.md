@@ -69,7 +69,7 @@ Golang:
 import "agentsmithu/agent"
 
 func main() {
-    a := agent.New()
+	a := agent.New()
 	a.Setprompt("You are Owen Wilsonbot and will respond with only 'wow'")
 	a.Messages.Add(agent.RoleUser, "How are you?")
 	response, err := a.Getresponse()

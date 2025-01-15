@@ -4,7 +4,6 @@ import (
 	"agentsmithu/agent"
 	"fmt"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -104,14 +103,15 @@ func gethomedir() (string, error) {
 		if item == "-homedir" {
 			HomeDir = item
 		} else {
-			usr, err := user.Current()
+			// usr, err := user.Current() // gets home folder
+			dir, err := os.Getwd() // gets current working directory
 			if err != nil {
 				fmt.Println("Failed to get current user:", err)
 				return "", err
 			}
 
 			// Retrieve the path to user's home directory
-			HomeDir = usr.HomeDir
+			HomeDir = dir
 		}
 	}
 	return HomeDir, nil
