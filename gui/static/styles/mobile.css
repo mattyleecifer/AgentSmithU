@@ -7,6 +7,14 @@
         width: 100%;
         }
     
+    .editbutton {
+        width: 15%;
+    }
+    
+    .agent {
+        width: 15%;
+    }
+
     .top-row {
         height: 80%;  
     }

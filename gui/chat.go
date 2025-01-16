@@ -48,13 +48,13 @@ func chat(ag *agent.Agent) http.HandlerFunc {
 						content += line + "<br>"
 					}
 					index := strconv.Itoa(i + 1)
-					content = `<div class="agent">` + item.Role + `</div>
+					content = `<div class="agent"><img src="/static/` + item.Role + `.svg"></div>
 					<div id="reply-` + index + `" class="content">
 						<pre style="white-space: pre-wrap; font-family: inherit;">` + item.Content + `</pre>
 					</div>
 					<div class="editbutton">
-						<button hx-get="/chat/edit/` + index + `" hx-target="#reply-` + index + `">Edit</button>
-						<button hx-delete="/chat/edit/` + index + `" hx-swap="outerHTML" hx-target="closest .message">Delete</button>
+						<button hx-get="/chat/edit/` + index + `" hx-target="#reply-` + index + `"><img src="/static/edit.svg"></button>
+						<button hx-delete="/chat/edit/` + index + `" hx-swap="outerHTML" hx-target="closest .message"><img src="/static/delete.svg"></button>
 					</div>`
 					msg := message{
 						Content: template.HTML(content),

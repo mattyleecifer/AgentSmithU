@@ -10,7 +10,7 @@ p {
 
 button {
     padding: 10px 5px;
-    width: 7vw;
+    width: 4vw;
     /* display: block; */
     /* margin: auto; */
     font-size: 14px;
@@ -124,7 +124,7 @@ input {
 }
 
 .editbutton {
-    width: 7%;
+    width: 4%;
     float: right;
     margin-left: auto;
 }
