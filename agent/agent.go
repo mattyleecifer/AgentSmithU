@@ -330,7 +330,7 @@ func agentAPIConverter(jsonStr string) (ChatResponse, error) {
 
 	// create local converter agent and set variables
 	converter := New()
-	converter.Model = "phi3" // any ollama llm should work, can even convert this to openai/mistral/anthropic
+	converter.Model = "llama3.2" // any ollama llm should work, can even convert this to openai/mistral/anthropic
 	converter.Modelurl = "http://localhost:11434/api/chat"
 	converter.Maxtokens = 2048
 	converter.Setprompt(`Extract the text/message data from any inputs. Output only the text/message data without any commentary. Do not change anything. Output the text/message data exactly as it is written in the original data`)

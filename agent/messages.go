@@ -7,7 +7,6 @@ import (
 
 	"fmt"
 	"regexp"
-	"sort"
 	"strconv"
 )
 
@@ -41,30 +40,13 @@ func (m *Messages) Clearlines(editchoice string) error {
 	reg := regexp.MustCompile("[0-9]+")
 	nums := reg.FindAllString(editchoice, -1)
 
-	var sortednums []int
-	// Convert each numerical string to integer and sort
+	// Convert each numerical string to integer and turn the corresponding message to '_'
 	for _, numStr := range nums {
-		num, err := strconv.Atoi(numStr)
-		if err != nil {
-			return err
+		if num, err := strconv.Atoi(numStr); err == nil && num < len(*m) {
+			(*m)[num].Content = "_"
+			fmt.Println("Clearing line: ", num)
 		}
-		sortednums = append(sortednums, num)
 	}
-
-	sort.Ints(sortednums)
-	fmt.Println("Clearing lines: ", sortednums)
-
-	// go from highest to lowest to not fu the order
-	// for i := len(sortednums) - 1; i >= 0; i-- {
-	// 	agent.Messages = append(agent.Messages[:sortednums[i]], agent.Messages[sortednums[i]+1:]...)
-	// }
-	newmessages := *m
-
-	for _, num := range sortednums {
-		newmessages[num].Content = "_"
-	}
-
-	*m = newmessages
 
 	return nil
 }
@@ -74,21 +56,14 @@ func (m *Messages) Clearlines(editchoice string) error {
 // is used to actually remove them on page reload for gui
 func (m *Messages) Deletelines() {
 	messages := *m
-	// remove empty messages
-	// figure out what they are first
-	var emptymessages []int
-	for i, item := range messages {
-		if item.Content == "_" {
-			emptymessages = append(emptymessages, i)
+	// Create a new slice to store non-empty messages
+	nonEmptyMessages := make([]Message, 0, len(messages))
+	// Append all non-empty messages to the new slice
+	for _, msg := range messages {
+		if msg.Content != "_" {
+			nonEmptyMessages = append(nonEmptyMessages, msg)
 		}
 	}
-
-	// sort the numbers and start from top
-	sort.Ints(emptymessages)
-	fmt.Println("Deleting lines: ", emptymessages)
-
-	for i := len(emptymessages) - 1; i >= 0; i-- {
-		messages = append(messages[:emptymessages[i]], messages[emptymessages[i]+1:]...)
-	}
-	*m = messages
+	// Replace the original slice with the new slice
+	*m = nonEmptyMessages
 }
