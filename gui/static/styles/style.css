@@ -103,7 +103,7 @@ input {
 
 .agent {
     display: flex;
-    width: 8%;
+    width: 4%;
     float: left;
     text-align: center;
     align-items: center;
@@ -127,6 +127,9 @@ input {
     width: 4%;
     float: right;
     margin-left: auto;
+}
+.editbutton button {
+    width: 70%;
 }
 
 .bottom-row {

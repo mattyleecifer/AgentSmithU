@@ -10,6 +10,9 @@
     .editbutton {
         width: 15%;
     }
+    .editbutton button {
+        width: 100%;
+    }
     
     .agent {
         width: 15%;
